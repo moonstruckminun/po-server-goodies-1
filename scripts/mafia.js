@@ -1480,11 +1480,24 @@ function Mafia(mafiachan) {
 	};
     this.addEventTheme = function (src,theme,place) {
         var srcname = sys.name(src);
+    this.addEventTheme = function (src,theme,place) {
+        var srcname = sys.name(src);
     	var theme = this.getThemeName(theme);
-    	if (this.themeManager.themes.indexOf(theme) !== -1) {
+    	if (!(theme)) {
     	    gamemsg(srcname, "That isn't a theme...");
     	    return;
     	}
+    	if (place === "first") {
+    	    this.eventQueue.reverse();
+    	    this.eventQueue.push(theme);
+    	    this.eventQueue.reverse();
+    	}
+    	else {
+    	    this.eventQueue.push(theme);
+    	}
+    	gamemsg(srcname, "Theme " + theme + " added to the Event Queue.");
+    	this.showEventQueue(src);
+    };
     	if (place === "first") {
     	    this.eventQueue.reverse();
     	    this.eventQueue.push(theme);
@@ -1528,11 +1541,25 @@ function Mafia(mafiachan) {
     };
     this.addToEventPool = function(src,theme) {
         var srcname = sys.name(src);
+    	
+    this.addEventTheme = function (src,theme,place) {
+        var srcname = sys.name(src);
     	var theme = this.getThemeName(theme);
-    	if (this.themeManager.themes.indexOf(theme) !== -1) {
+    	if (!(theme)) {
     	    gamemsg(srcname, "That isn't a theme...");
     	    return;
     	}
+    	if (place === "first") {
+    	    this.eventQueue.reverse();
+    	    this.eventQueue.push(theme);
+    	    this.eventQueue.reverse();
+    	}
+    	else {
+    	    this.eventQueue.push(theme);
+    	}
+    	gamemsg(srcname, "Theme " + theme + " added to the Event Queue.");
+    	this.showEventQueue(src);
+    };
     	this.eventThemePool.push(theme);
     	gamemsg(srcname, "Theme " + theme + " added to Event Pool.");
     	this.showEventPool(src);
@@ -1684,12 +1711,12 @@ function Mafia(mafiachan) {
         var themes = mafia.themeManager.themes;
         var data = data.toLowerCase();
         for (var x in themes) {
-            if (themes[x].altname && themes[x].altname.toLowerCase() === data) {
+            if ((themes[x].altname && themes[x].altname.toLowerCase() === data) || (themes[x].name.toLowerCase() === data)) {
                 data = themes[x].name.toLowerCase();
-                break;
+                return data;
             }
         }
-        return data;
+        return false;
     };
     this.getCurrentTheme = function(data) {
         var themeName = "default";
