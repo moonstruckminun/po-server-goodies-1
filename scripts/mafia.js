@@ -1658,12 +1658,12 @@ function Mafia(mafiachan) {
             border = DEFAULT_BORDER;
             sendChanAll("", mafiachan);
             sendChanAll(border, mafiachan);
-            mafiabot.sendHtmlAll(sys.name(src) + " started a voting for next game's theme! You have " + this.ticks + " seconds to vote with /vote or /votetheme!", mafiachan);
+            mafiabot.sendHtmlAll(sys.name(src) + " started a voting for next game's theme! You have " + this.ticks + " seconds to vote with /vote or /votetheme!");
             var casedThemes = [];
             for (var x in this.possibleThemes) {
                 casedThemes.push(htmlVoteTheme(this.themeManager.themes[x].name));
             }
-            mafiabot.sendHtmlAll("Choose from these themes: " + casedThemes.join(", ") + " !", mafiachan);
+            mafiabot.sendHtmlAll("Choose from these themes: " + casedThemes.join(", ") + " !");
             sendChanAll(border, mafiachan);
             sendChanAll("", mafiachan);
         }
