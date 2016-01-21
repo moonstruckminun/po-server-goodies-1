@@ -117,6 +117,10 @@ function Mafia(mafiachan) {
     function htmlVoteTheme(mess) {
         return("<a href=\"po:send//votetheme " + mess + "\">" + mess + "</a>");
     }
+    function standbyMsgHtml(match) {
+        var command = match.slice(1, -1);
+        return match[0] + htmlLink(command) + match.slice(-1);
+    }
     /*Sends a Game bot message, if no bot name is defined, it adds "±Game"
     * Note: use "srcname" instead of "src" as src holds the player's ID*/
     function gamemsg(src, mess, botName, channel, html) {
@@ -4378,10 +4382,7 @@ function Mafia(mafiachan) {
                         act = player.role.actions.standby[k];
                         charges = mafia.getCharges(player, "standby", k);
                         if (act.msg && (charges === undefined || charges > 0)) {
-                            var msg = html_escape(act.msg).replace(/\s\/[A-Z]+[0-9]*[^A-Z]/gi, function(match)) {
-                                var command = match.slice(1, -1);
-                                return match[0] + htmlLink(command) + match.slice(-1);
-                            };
+                            var msg = html_escape(act.msg).replace(/\s\/[A-Z]+[0-9]*[^A-Z]/gi, standbyMsgHtml(act.msg));
                             gamemsg(names[j], msg, undefined, undefined, true);
                         }
                     }
