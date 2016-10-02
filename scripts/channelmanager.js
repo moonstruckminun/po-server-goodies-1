@@ -43,6 +43,7 @@ POChannelManager.prototype.update = function(channel)
 POChannelManager.prototype.restoreSettings = function(channel)
 {
     var chan = SESSION.channels(channel);
+    cleanFile(this.dataFileFor(channel););
     var chanData = this.loadChan(channel);
     this.copyAttrs.forEach(function(attr) {
         if (chanData !== null && chanData.hasOwnProperty(attr))

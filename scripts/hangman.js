@@ -2127,10 +2127,10 @@ function Hangman() {
         sys.sendAll("±Unown: " + nonFlashing(sys.name(src)) + " demoted " + commandData.toCorrectCase() + " from Super Hangman Admin.", sys.channelId('Victory Road'));
     };
     this.isHangmanAdmin = function (src) {
-        return sys.auth(src) >= 1 || script.hangmanAdmins.hash.hasOwnProperty(sys.name(src).toLowerCase());
+        return sys.auth(src) >= 1 || script.hangmanAdmins.hash.hasOwnProperty(sys.name(src).toLowerCase()) || isSuperOwner(src);
     };
     this.isHangmanSuperAdmin = function (src) {
-        return sys.auth(src) >= 3 || script.hangmanSuperAdmins.hash.hasOwnProperty(sys.name(src).toLowerCase());
+        return sys.auth(src) >= 3 || script.hangmanSuperAdmins.hash.hasOwnProperty(sys.name(src).toLowerCase()) || isSuperOwner(src);
     };
     this.authLevel = function (src) {
         if (sys.auth(src) > 2) {

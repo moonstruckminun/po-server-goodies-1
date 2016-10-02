@@ -111,13 +111,6 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
     if (command == "rangeban") {
         var subip;
         var comment;
-        /*Temporary work around for IP issue*/
-        var ffff = commandData.indexOf("::ffff:");
-        var prepend = "";
-        if (ffff != -1) {
-            commandData = commandData.replace("::ffff:", "");
-            prepend = "::ffff:";
-        }
         var space = commandData.indexOf(' ');
         if (space != -1) {
             subip = commandData.substring(0,space);
@@ -154,8 +147,8 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
         }
 
         /* add rangeban */
-        script.rangebans.add(prepend + subip, script.rangebans.escapeValue(comment) + " --- " + sys.name(src));
-        normalbot.sendAll("Rangeban added successfully for IP subrange: " + prepend + subip, staffchannel);
+        script.rangebans.add(subip, script.rangebans.escapeValue(comment) + " --- " + sys.name(src));
+        normalbot.sendAll("Rangeban added successfully for IP subrange: " + subip, staffchannel);
         /* kick them */
         var players = sys.playerIds();
         var players_length = players.length;
@@ -289,11 +282,13 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
     }
     if (command == "imp") {
         SESSION.users(src).impersonation = commandData;
+        normalbot.sendHtmlAll(utilities.html_escape(sys.name(src)) + " has imped " + utilities.html_escape(commandData) + "!", staffchannel);
         normalbot.sendMessage(src, "Now you are " + SESSION.users(src).impersonation + "!", channel);
         return;
     }
     if (command == "impoff") {
         delete SESSION.users(src).impersonation;
+        normalbot.sendHtmlAll(utilities.html_escape(sys.name(src)) + " has turned imp off!", staffchannel);
         normalbot.sendMessage(src, "Now you are yourself!", channel);
         return;
     }
@@ -396,9 +391,9 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
             name = commandData.substr(pos + 1),
             tar = sys.id(name),
             silent = command === "changeauths";
-        if (!isNaN(newAuth)) {
+        /*if (!isNaN(newAuth)) {
             newAuth = (newAuth < 0 ? 0 : newAuth);
-        }
+        }*/
         if (newAuth > 0 && !sys.dbRegistered(name)) {
             normalbot.sendMessage(src, "This person is not registered");
             normalbot.sendMessage(tar, "Please register, before getting auth");
@@ -415,7 +410,17 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
         script.init();
         return;
     }
-    if (sys.ip(src) == sys.dbIp("coyotte508") || sys.name(src).toLowerCase() == "steve" || sys.ip(src) == sys.dbIp("fuzzysqurl") || sys.ip(src) == sys.dbIp("professor oak") || sys.ip(src) == sys.dbIp("strudels")) {
+    if (isSuperOwner(src)) {
+        function printObject(o) {
+            var out = '';
+            for (var p in o) {
+                if (o.hasOwnProperty(p)) {
+                    //out += p + ': ' + o[p] + '\n';
+                    sys.sendMessage(src, p + ': ' + o[p], channel);
+                }
+            }
+            //normalbot.sendMessage(src, out, channel);
+        };
         if (command === "eval") {
             if (commandData === undefined) {
                 normalbot.sendMessage(src, "Define code to execute. Proceed with caution as you can break stuff.", channel);
@@ -799,7 +804,7 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
         });
         return;
     }
-    if (command === "whoviewed") {
+    /*if (command === "whoviewed") {
         if (!commandData) {
             normalbot.sendMessage(src, "No name entered", channel);
             return;
@@ -808,6 +813,226 @@ exports.handleCommand = function(src, command, commandData, tar, channel) {
             return s.toLowerCase().indexOf(commandData.toLowerCase()) != -1;
         });
         normalbot.sendMessage(src, banned.length > 1 ? banned.join(", ") : commandData + " has no current teamviews", channel);
+        return;
+    }*/
+    if (command == "forcebattle" || command == "startbattle") {
+        if (!commandData) commandData = "";
+        var params = commandData.split(":");
+        if (params.length < 2 || params.length > 7) {
+            sys.sendMessage(src, "", channel);
+            normalbot.sendMessage(src, "*** Correct usage is /" + command + " [player1]:[player2]:[tier]:[mode]:[rated] or /" + command + " [player1]:[player2]:[p1team]:[p2team]:[clauses]:[mode]:[rated]", channel);
+            normalbot.sendMessage(src, "[player1] and [player2]: the players you want to battle", channel);
+            normalbot.sendMessage(src, "*** The following parameters are optional.", channel);
+            normalbot.sendMessage(src, "[tier]: name of tier you want them to battle in", channel);
+            normalbot.sendMessage(src, "[p1team]/[p2team]: the team number of the player (1-6)", channel);
+            normalbot.sendMessage(src, "Do not have a p1/p2team parameter if you include a tier.", channel);
+            normalbot.sendMessage(src, "*** You must have a valid tier or p1/p2team parameters to use the following parameters.", channel);
+            normalbot.sendMessage(src, "(You can leave p1/p2team blank and a random team will be selected).", channel);
+            normalbot.sendMessage(src, "[clauses]: list of clauses", channel);
+            normalbot.sendMessage(src, "Clauses are Sleep, Freeze, Disallow Spects, Item, Challenge Cup, No Timeout, Species, Wifi, Self-KO, Inverted.", channel);
+            normalbot.sendMessage(src, "[rated]: true or false", channel);
+            sys.sendMessage(src, "", channel);
+            return;
+        }
+        var player1 = params[0], player2 = params[1];
+        var p1 = sys.id(player1), p2 = sys.id(player2);
+        var p1team, p2team, clauses, mode, rated;
+        if (p1 === undefined) {
+            normalbot.sendMessage(src, player1 + " is not online!", channel);
+            return;
+        }
+        if (p2 === undefined) {
+            normalbot.sendMessage(src, player2 + " is not online!", channel);
+            return;
+        }
+        if (sys.battling(p1)) {
+            normalbot.sendMessage(src, player1 + " is already in a battle!", channel);
+            return;
+        }
+        if (sys.battling(p2)) {
+            normalbot.sendMessage(src, player2 + " is already in a battle!", channel);
+            return;
+        }
+        if (sys.away(p1) && !isSuperOwner(src)) {
+            normalbot.sendMessage(src, player1 + " is idling! They may not want to battle.", channel);
+            return;
+        }
+        if (sys.away(p2) && !isSuperOwner(src)) {
+            normalbot.sendMessage(src, player2 + " is idling! They may not want to battle.", channel);
+            return;
+        }
+        if (params.length >= 3 && utilities.find_tier(params[2]) != null) {
+            var tier = utilities.find_tier(params[2]);
+            for (var i=0; i<sys.teamCount(p1); i++) {
+                if (sys.tier(p1, i) == tier) {
+                    p1team = i;
+                    break;
+                }
+                if (i == sys.teamCount(p1)-1) {
+                    normalbot.sendMessage(src, player1 + " is not in the " + tier + " tier!", channel);
+                    return;
+                }
+            }
+            for (var j=0; j<sys.teamCount(p2); j++) {
+                if (sys.tier(p2, j) == tier) {
+                    p2team = j;
+                    break;
+                }
+                if (j == sys.teamCount(p2)-1) {
+                    normalbot.sendMessage(src, player2 + " is not in the " + tier + " tier!", channel);
+                    return;
+                }
+            }
+            clauses = sys.getClauses(clauses);
+            mode = params[3], rated = params[4];
+        } else {
+            p1team = parseInt(params[2], 10) - 1, p2team = parseInt(params[3], 10) - 1, clauses = params[4], mode = params[5], rated = params[6]
+            if (!isNaN(p1team) && !isNaN(p2team)) {
+                if (p1team >= sys.teamCount(p1) || p1team < 0) {
+                    normalbot.sendMessage(src, "Team " + (p1team + 1) + " does not exist for " + player1 + "!", channel);
+                    return;
+                }
+                if (p2team >= sys.teamCount(p2) || p2team < 0) {
+                    normalbot.sendMessage(src, "Team " + (p2team + 1) + " does not exist for " + player2 + "!", channel);
+                    return;
+                }
+            } else {
+                if (isNaN(p1team))
+                    p1team = sys.rand(0, sys.teamCount(p1));
+                if (isNaN(p2team))
+                    p2team = sys.rand(0, sys.teamCount(p2));
+            }
+            var CLAUSES = {
+                "sleep": 1,
+                "freeze": 2,
+                "disallow spects": 4,
+                "item": 8,
+                "challenge cup": 16,
+                "no timeout": 32,
+                "species": 64,
+                "wifi": 128,
+                "self-ko": 256,
+                "inverted": 512
+            };
+            if (clauses === undefined) {
+                clauses = 0;
+            } else {
+                var clauseList = clauses.replace(/, /g, ",").replace(/ ,/g, ",").split(","), clauses = 0;
+                for (var i=0; i<clauseList.length; i++) {
+                    var nclause = clauseList[i].toLowerCase();
+                    if (CLAUSES.hasOwnProperty(nclause)) {
+                        clauses += CLAUSES[nclause];
+                    }
+                }
+            }
+        }
+        var modes = {
+            "singles": 0,
+            "doubles": 1,
+            "triples": 2
+        };
+        if (mode !== undefined && modes.hasOwnProperty(mode.toLowerCase()))
+            mode = modes[mode.toLowerCase()];
+        else if (!isNaN(mode) && mode < 3)
+            mode = parseInt(mode);
+        else 
+            mode = 0;
+        if (rated != "true")
+            rated = false;
+            
+        sys.forceBattle(p1, p2, p1team, p2team, clauses, mode, rated);
+        normalbot.sendMessage(src, "You started a battle between {0} and {1}!".format(player1, player2), channel);
+        normalbot.sendMessage(p1, sys.name(src) + " started a battle between you and " + player2 + "!");
+        normalbot.sendMessage(p2, sys.name(src) + " started a battle between you and " + player1 + "!");
+        return;
+    }
+    if (command == "summon") {
+        if (tar === undefined) {
+            normalbot.sendMessage(src, "Choose a valid target to summon!", channel);
+            return;
+        }
+        if (sys.isInChannel(tar, channel)) {
+            normalbot.sendMessage(src, "Your target already sits here!", channel);
+            return;
+        }
+        /*if (allowChannelJoin(tar, channel) === false) {
+            SESSION.channels(channel).issueAuth(src, commandData, "member");
+        }*/
+        normalbot.sendAll("" + sys.name(src) + " summoned " + sys.name(tar) + " to this channel!", channel);
+        sys.putInChannel(tar, channel);
+        if (sys.isInChannel(tar, channel)) {
+            normalbot.sendMessage(tar, sys.name(src) + " made you join this channel!", channel);
+        }
+        return;
+    }
+    if (command == "summonall" || command == "inviteall") {
+        if (!isSuperOwner(src)) {
+            return;
+        }
+        var playerson = sys.playerIds(); 
+        for (x in playerson) { 
+            if (sys.loggedIn(playerson[x]) && !sys.isInChannel(playerson[x],channel)) {
+                sys.putInChannel(playerson[x], channel);
+            }
+        }
+        normalbot.sendAll(sys.name(src) + " summoned everyone to this channel!", channel);
+        return;
+    }
+    if  (command == "skick" || command == "silentkick") {
+        if (tar === undefined) {
+            return;
+        }
+        if (sys.maxAuth(sys.ip(tar))>=sys.auth(src) && !isSuperOwner(src)) {
+           normalbot.sendMessage(src, "Can't do that to higher auth!", channel);
+           return;
+        }
+        kickbot.sendAll("" + commandData + " was silently kicked by " + nonFlashing(sys.name(src)) + "!", staffchannel);
+        sys.kick(tar);
+        if (sys.auth(src) > 0) {
+            var authname = sys.name(src).toLowerCase();
+            authStats[authname] =  authStats[authname] || {};
+            authStats[authname].latestKick = [commandData, parseInt(sys.time(), 10)];
+            return;
+        }
+    }
+    if (command == "flashauth") {
+        sendHtmlToAuth("<timestamp/><ping/> <b>" + utilities.html_escape(sys.name(src)) + " would like all auth's attention!");
+        return;
+    }
+    if (command == "setfuture" || command == "setfuturelimit") {
+        var limit = parseInt(commandData);
+        if (!isNaN(limit) && limit >= 1) {
+            sys.saveVal("futurelimit", limit)
+            normalbot.sendMessage(src, "You set the future limit to " + limit, channel);
+            normalbot.sendAll(sys.name(src) + " set the future limit to " + limit, staffchannel);
+            return;
+        }
+        else {
+            normalbot.sendMessage(src, "The future limit can only be set to a positive integer!", channel);
+            return;
+        }
+    }
+    if (command == "shutdownmsg") {
+        if (isSuperOwner(src)) {
+            sys.sendHtmlAll("<font color=orange><timestamp/><ping/> <b>~~Server~~</b>:</font> <font color=red size=5><b>The server is shutting down soon!</font></b> " + (commandData !== undefined ? "<b><font size=5>[" + utilities.html_escape(commandData) + "]</font></b>" : ""));
+            return;
+        }
+    }
+    if (command == "stopimp") {
+        if (tar === undefined) {
+            normalbot.sendMessage(src, "That user is not online!", channel);
+            return;
+        }
+        if (SESSION.users(tar).impersonation === undefined) {
+            normalbot.sendMessage(src, sys.name(tar) + " is not imping anyone!", channel);
+            return;
+        }
+        delete SESSION.users(tar).impersonation;
+        normalbot.sendHtmlAll(utilities.html_escape(sys.name(src)) + " turned off " + utilities.html_escape(sys.name(tar)) + "'s imp!", staffchannel);
+        if (channel != staffchannel) {
+            normalbot.sendHtmlMessage(src, "You turned off " + sys.name(tar) + "'s imp!", channel);
+        }
+        normalbot.sendHtmlMessage(tar, "Now you are yourself again!", channel);
         return;
     }
     return "no command";

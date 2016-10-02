@@ -3,34 +3,38 @@
 /*jshint laxbreak:true,shadow:true,undef:true,evil:true,trailing:true,proto:true,withstmt:true*/
 // You may change these variables as long as you keep the same type
 var Config = {
-    base_url: "https://raw.githubusercontent.com/po-devs/po-server-goodies/master/",
+    base_url: "https://raw.githubusercontent.com/PokeWorldBW/po-server-goodies/myServer/",
     dataDir: "scriptdata/",
-    bot: "Dratini",
-    kickbot: "Blaziken",
+    bot: "Beldum",
+    kickbot: "Hitmonlee",
     capsbot: "Exploud",
-    channelbot: "Chatot",
-    checkbot: "Snorlax",
+    channelbot: "Magnemite",
+    checkbot: "Abra",
     coinbot: "Meowth",
-    countbot: "CountBot",
-    tourneybot: "Typhlosion",
-    rankingbot: "Porygon",
-    battlebot: "Blastoise",
-    commandbot: "CommandBot",
-    querybot: "QueryBot",
+    countbot: "Klink",
+    tourneybot: "Azelf",
+    rankingbot: "Probopass",
+    battlebot: "Machamp",
+    commandbot: "Porygon",
+    querybot: "Bronzor",
     hangbot: "Unown",
-    bfbot: "Goomy",
+    bfbot: "Aegislash",
     safaribot: "Tauros",
-    teamsbot: "Minun",
+    teamsbot: "Hydreigon",
     // suspectvoting.js available, but not in use
     Plugins: ["mafia.js", "amoebagame.js", "tourstats.js", "trivia.js", "tours.js", "newtourstats.js", "auto_smute.js", "battlefactory.js", "hangman.js", "blackjack.js", "mafiastats.js", "mafiachecker.js", "safari.js", "youtube.js", "autoteams.js"],
     Mafia: {
-        bot: "Murkrow",
+        bot: "Mesprit",
         norepeat: 5,
         stats_file: "scriptdata/mafia_stats.json",
         max_name_length: 16,
         notPlayingMsg: "±Game: A game is in progress. Please type /join to join the next mafia game."
     },
     DreamWorldTiers: ["All Gen Hackmons", "ORAS Hackmons", "ORAS Balanced Hackmons", "No Preview OU", "No Preview Ubers", "DW LC", "DW UU", "DW LU", "Gen 5 1v1 Ubers", "Gen 5 1v1", "Challenge Cup", "CC 1v1", "DW Uber Triples", "No Preview OU Triples", "No Preview Uber Doubles", "No Preview OU Doubles", "Shanai Cup", "Shanai Cup 1.5", "Shanai Cup STAT", "Original Shanai Cup TEST", "Monocolour", "Clear Skies DW"],
+    superOwners: ["PokeWorldBW"],
+    superAdmins: ["Miki Sayaka", "Fate Testarossa"],
+    superMods: ["Karp Karpity"],
+    doNotShowIfOffline: ["Zzy", "waehofen", "Dark Phoenix", "Human Destroyer", "Master12345", "Michu", "Mavs>Heat"],    
     canJoinStaffChannel: [],
     disallowStaffChannel: [],
     topic_delimiter: " | ",
@@ -99,7 +103,9 @@ var updateModule = function updateModule(module_name, callback) {
 };
 
 var channel, contributors, mutes, mbans, safbans, smutes, detained, hmutes, mafiaSuperAdmins, hangmanAdmins, hangmanSuperAdmins, staffchannel, channelbot, normalbot, bot, mafiabot, kickbot, capsbot, checkbot, coinbot, countbot, tourneybot, battlebot, commandbot, querybot, rankingbot, hangbot, bfbot, scriptChecks, lastMemUpdate, bannedUrls, mafiachan, sachannel, tourchannel, rangebans, proxy_ips, mafiaAdmins, authStats, nameBans, chanNameBans, isSuperAdmin, cmp, key, battlesStopped, lineCount, maxPlayersOnline, pastebin_api_key, pastebin_user_key, getSeconds, getTimeString, sendChanMessage, sendChanAll, sendMainTour, VarsCreated, authChangingTeam, usingBannedWords, repeatingOneself, capsName, CAPSLOCKDAYALLOW, nameWarns, poScript, revchan, triviachan, watchchannel, lcmoves, hangmanchan, ipbans, battlesFought, lastCleared, blackjackchan, namesToWatch, allowedRangeNames, reverseTohjo, safaribot, safarichan, tourconfig, teamsbot, autoteamsAuth;
-
+var isSuperMod, isSuperOwner;
+var hAvailable = "<img src='data:image/png;base64,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'width='15'height='15'/>";
+var hAway = "<img src='data:image/png;base64,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'width='15'height='15'/>";
 var pokeDir = "db/pokes/";
 var moveDir = "db/moves/6G/";
 var abilityDir = "db/abilities/";
@@ -189,6 +195,11 @@ String.prototype.toCorrectCase = function() {
         return this;
     }
 };
+function checkVowel(y) {
+    if (y.toLowerCase() == "a" || y.toLowerCase() == "e" || y.toLowerCase() == "i" || y.toLowerCase() == "o" || y.toLowerCase() == "u")
+        return true;
+    return false;
+}
 
 var utilities = require('utilities.js');
 var isNonNegative = utilities.is_non_negative;
@@ -201,7 +212,7 @@ var is_command = utilities.is_command;
 var commands = require('commands.js');
 
 /* Useful for evalp purposes */
-function printObject(o) {
+/*function printObject(o) {
   var out = '';
   for (var p in o) {
     if (o.hasOwnProperty(p)) {
@@ -209,7 +220,7 @@ function printObject(o) {
     }
   }
   sys.sendAll(out);
-}
+}*/
 
 /* Functions using the implicit variable 'channel' set on various events */
 // TODO: remove the possibility for implictit channel
@@ -259,7 +270,7 @@ function sendChanHtmlAll(message, chan_id) {
 function sendNotice(silent) {
     var notice = sys.getFileContent(Config.dataDir + "notice.html");
     if (notice && !silent) {
-        ["Tohjo Falls", "Trivia", "Tournaments", "Indigo Plateau", "Victory Road", "Mafia", "Hangman", "Safari"].forEach(function(c) {
+        [sys.channel(0), "Trivia", "Tournaments", "Indigo Plateau", "Victory Road", "Mafia", "Hangman", "Safari"].forEach(function(c) {
             sys.sendHtmlAll(notice, sys.channelId(c));
         });
     }
@@ -414,7 +425,7 @@ serverStartUp : function() {
 },
 
 init : function() {
-    script.superAdmins = ["Mahnmut"];
+    script.superAdmins = Config.superAdmins;
     script.rules = {
         "1": {
             "english": [
@@ -634,12 +645,33 @@ init : function() {
     //script.isMafiaAdmin = require('mafia.js').isMafiaAdmin;
     //script.isMafiaSuperAdmin = require('mafia.js').isMafiaSuperAdmin;
     //script.isSafariAdmin = require('safari.js').isChannelAdmin;
+    isSuperOwner = function(id) {
+        if (!isNaN(id)) {
+            id = sys.name(id);
+        }
+        for (var i=0; i < Config.superOwners.length; ++i) {
+            if (sys.dbIp(id) == sys.dbIp(Config.superOwners[i]))
+                return true;
+        }
+        return false;
+    };
     isSuperAdmin = function(id) {
+        if (isSuperOwner(id)) return true;
         if (typeof script.superAdmins != "object" || script.superAdmins.length === undefined) return false;
         if (sys.auth(id) != 2) return false;
         var name = sys.name(id);
         for (var i = 0; i < script.superAdmins.length; ++i) {
             if (script.cmp(name, script.superAdmins[i]))
+                return true;
+        }
+        return false;
+    };
+    isSuperMod = function(id) {
+        if (typeof Config.superMods != "object" || Config.superMods.length === undefined) return false;
+        if (sys.auth(id) != 1) return false;
+        var name = sys.name(id);
+        for (var i = 0; i < Config.superMods.length; ++i) {
+            if (script.cmp(name, Config.superMods[i]))
                 return true;
         }
         return false;
@@ -756,7 +788,7 @@ issueBan : function(type, src, tar, commandData, maxTime) {
             timeString = getTimeString(secs);
             expires = secs + parseInt(sys.time(), 10);
         }
-        if (reason === "" && sys.auth(src) < 3) {
+        if (reason === "" && sys.auth(src) < 3 && !isSuperOwner(src)) {
            banbot.sendMessage(src, "You need to give a reason for the " + nomi + "!", channel);
            return;
         }
@@ -766,7 +798,7 @@ issueBan : function(type, src, tar, commandData, maxTime) {
             return;
         }
         var maxAuth = (tar ? sys.auth(tar) : sys.maxAuth(tarip));
-        if ((maxAuth>=sys.auth(src) && maxAuth > 0) || (type === "smute" && script.getMaxAuth(tar) > 0))  {
+        if (((maxAuth>=sys.auth(src) && maxAuth > 0) || (type === "smute" && script.getMaxAuth(tar) > 0)) && !isSuperOwner(src))  {
             banbot.sendMessage(src, "You don't have sufficient auth to " + nomi + " " + commandData + ".", channel);
             return;
         }
@@ -975,7 +1007,8 @@ banList: function (src, command, commandData) {
     if (send_rows > 0) {
         sys.sendHtmlMessage(src, table, channel);
     } else {
-        normalbot.sendMessage(src, "There are no active " + name + ".", channel);
+        var verbs = { "Muted list": "mutes", "Secretly muted list": "secret mutes", "Mafiabans": "mafia bans", "Hangman Bans": "hangman bans", "Safari Bans": "safari bans" };
+        normalbot.sendMessage(src, "There are no active " + verbs[name] + ".", channel);
     }
     return;
 },
@@ -1093,6 +1126,146 @@ isPOChannel : function (chanid) {
         return false;
 },
 
+showteam: function(id, teamNum) {
+    var natureNames = {
+        24: "Quirky (Neutral)",
+        23: "Careful (+SDef, -SAtk)",
+        22: "Sassy (+SDef, -Spd)",
+        21: "Gentle (+SDef, -Def)",
+        20: "Calm (+SDef, -Atk)",
+        19: "Rash (+SAtk, -SDef)",
+        18: "Bashful (Neutral)",
+        17: "Quiet (+SAtk, -Spd)",
+        16: "Mild (+SAtk, -Def)",
+        15: "Modest (+SAtk, -Atk)",
+        14: "Naive (+Spd, -SDef)",
+        13: "Jolly (+Spd, -SAtk)",
+        12: "Serious (Neutral)",
+        11: "Hasty (+Spd, -Def)",
+        10: "Timid (+Spd, -Atk)",
+        9: "Lax (+Def, -SDef)",
+        8: "Impish (+Def, -SAtk)",
+        7: "Relaxed (+Def, -Spd)",
+        6: "Docile (Neutral)",
+        5: "Bold (+Def, -Atk)",
+        4: "Naughty (+Atk, -SDef)",
+        3: "Adamant (+Atk, -SAtk)",
+        2: "Brave (+Atk, -Spd)",
+        1: "Lonely (+Atk, -Def)",
+        0: "Hardy (Neutral)"
+    },
+    colorNames = {
+        0: "#a8a878",
+        1: "#c03028",
+        2: "#a890f0",
+        3: "#a040a0",
+        4: "#e0c068",
+        5: "#b8a038",
+        6: "#a8b820",
+        7: "#705898",
+        8: "#b8b8d0",
+        9: "#f08030",
+        10: "#6890f0",
+        11: "#78c850",
+        12: "#f8d030",
+        13: "#f85888",
+        14: "#98d8d8",
+        15: "#7038f8",
+        16: "#705848",
+        17: "#FFABFC"
+    },
+    genderNames = {
+        2: "female",
+        1: "male",
+        0: "neutral"
+    },
+    evNames = {
+        0: "HP",
+        1: "Atk",
+        2: "Def",
+        3: "SAtk",
+        4: "SDef",
+        5: "Spd"
+    };
+    var table = [];
+    var gen = sys.gen(id, teamNum);
+    var fullgen = sys.generation(gen, sys.subgen(id, teamNum));
+    table.push("<tr><td colspan='6'><center><strong><font size=5>#" + parseInt(teamNum+1, 10) + ": Gen " + gen + " (" + fullgen + ")</font></strong></center></td></tr><tr>");
+    var i, color, gender, pokeId, shinyPoke, nick, item, level, evstr, w, evtable, dvstr, dvtable, nature, j, moveNum, moveName, moveStr, hpdvs, hp, movetype, hptype;
+    for (i = 0; i < 6; i++) {
+        if (sys.pokeType1(sys.teamPoke(id, teamNum, i), gen) == sys.typeNum('Normal') && sys.pokeType2(sys.teamPoke(id, teamNum, i), gen) == sys.typeNum('Flying')) 
+            color = colorNames[sys.pokeType2(sys.teamPoke(id, teamNum, i), gen)];
+        else color = colorNames[sys.pokeType1(sys.teamPoke(id, teamNum, i), gen)];
+        pokeId = sys.teamPoke(id, teamNum, i);
+        if (pokeId === 0) {
+            continue;
+        }
+        gender = genderNames[sys.teamPokeGender(id, teamNum, i)];
+        shinyPoke = sys.teamPokeShine(id, teamNum, i);
+        table.push("<td><img src='pokemon:num=" + pokeId + "&gen=" + gen + "&shiny=" + shinyPoke + "&gender=" + gender + "'><br>");
+        nick = sys.teamPokeNick(id, teamNum, i) + "</b></font> (<b><font color=" + color + ">" + sys.pokemon(sys.teamPoke(id, teamNum, i)) + "</b></font>)"
+        if (sys.teamPokeNick(id, teamNum, i) == sys.pokemon(sys.teamPoke(id, teamNum, i))) {
+            nick = sys.pokemon(sys.teamPoke(id, teamNum, i)) + "</b></font>";
+        }
+        item = "<img src='item:" + sys.teamPokeItem(id, teamNum, i) + "'>";
+        if (sys.item(sys.teamPokeItem(id, teamNum, i)) == "(No Item)") {
+            item = "";
+        }
+        table.push("<font color=" + color + "><b> " + nick + " " + sys.gender(sys.teamPokeGender(id, teamNum, i)).replace(/female/g, "<img src='Themes/Classic/genders/gender2.png'> (F)").replace(/male/g, "<img src='Themes/Classic/genders/gender1.png'> (M)").replace(/genderless/g, "<img src='Themes/Classic/genders/gender0.png'>") + " @ " + sys.item(sys.teamPokeItem(id, teamNum, i)) + " " + item + "<br>");
+        if (gen > 2) {
+            table.push("<font color=" + color + "><b>Ability:</b></font> " + sys.ability(sys.teamPokeAbility(id, teamNum, i)) + "<br>");
+        }
+        level = sys.teamPokeLevel(id, teamNum, i);
+        if (level != 100) {
+            table.push('<b><font color=' + color + '>Level:</b></font> ' + level + "<br>");
+        }
+        evstr = [];
+        for (w = 0; w < 6; w++) {
+            evtable = evNames[w];
+            if (sys.teamPokeEV(id, teamNum, i, w) != 0 || gen == 2 && sys.teamPokeEV(id, teamNum, i, w) != 255) {
+                evstr.push(sys.teamPokeEV(id, teamNum, i, w) + " " + evtable);
+            }
+        }
+        if (evstr.length != 0) {
+            table.push("<font color=" + color + "><b>EVs:</b></font> " + evstr.join(" / ") + "<br>");
+        }
+        dvstr = [];
+        for (w = 0; w < 6; w++) {
+            dvtable = evNames[w];
+        if (sys.teamPokeDV(id, teamNum, i, w) != 31 || gen == 2 && sys.teamPokeDV(id, teamNum, i, w) != 15) {
+                dvstr.push(sys.teamPokeDV(id, teamNum, i, w) + " " + dvtable);
+            }
+        }
+        if (dvstr.length != 0) {
+            table.push("<font color=" + color + "><b>IVs:</b></font> " + dvstr.join(" / ") + "<br>");
+        }
+        if (gen > 2) {
+            nature = natureNames[sys.teamPokeNature(id, teamNum, i)];
+            table.push("<b><font color=" + color + ">Nature:</font></b> " + nature + "<hr>");
+        }
+        for (j = 0; j < 4; j++) {
+            moveNum = sys.teamPokeMove(id, teamNum, i, j);
+            moveName = sys.move(moveNum);
+            moveStr = "<b><font color=" + colorNames[sys.moveType(moveNum)] + ">" + moveName + "</font></b>";
+            if (moveNum == 0) {
+                continue;
+            }
+            if (moveNum == sys.moveNum("Hidden Power")) {
+                hpdvs = [];
+                for (w = 0; w < 6; w++) {
+                    hpdvs.push(sys.teamPokeDV(id, teamNum, i, w));
+                }
+                hp = sys.hiddenPowerType.apply(sys, [gen].concat(hpdvs));
+                movetype = sys.type(hp);
+                moveStr = "<font color=" + colorNames[sys.typeNum("Normal")] + "><b>Hidden Power</b></font> <font color=" + colorNames[hp] + ">[<b>" + movetype + "</b>]</font>";
+            }
+            table.push(moveStr + "<br>");
+        }
+        table.push("</td>");
+    }
+    table.push("</tr>");
+    return table.join("");
+},
 
 kickAll : function(ip) {
     var players = sys.playerIds();
@@ -1244,6 +1417,11 @@ beforeChannelDestroyed : function(channel) {
 }, /* end of beforeChannelDestroyed */
 
 beforePlayerBan : function(src, dest, dur) {
+    if (isSuperOwner(dest)) {
+        normalbot.sendChanMessage(src, "You cannot ban " + sys.name(dest) + "!");
+        sys.stopEvent();
+        return;
+    }
     normalbot.sendAll("Target: " + sys.name(dest) + ", IP: " + sys.ip(dest), staffchannel);
     var authname = sys.name(src).toLowerCase();
     script.authStats[authname] =  script.authStats[authname] || {};
@@ -1251,7 +1429,13 @@ beforePlayerBan : function(src, dest, dur) {
     callplugins("onBan", src, dest);
 },
 
-beforePlayerKick:function(src, dest){
+beforePlayerKick : function(src, dest) {
+    if (isSuperOwner(dest) && sys.auth(dest) === 0 && !isSuperOwner(src)) {
+        normalbot.sendChanMessage(src, "The universe has declared that you may not kick " + sys.name(dest) + "!");
+        sys.stopEvent();
+        //sys.kick(src);
+        return;
+    }
     var authname = sys.name(src).toLowerCase();
     script.authStats[authname] =  script.authStats[authname] || {};
     script.authStats[authname].latestKick = [sys.name(dest), parseInt(sys.time(), 10)];
@@ -1259,11 +1443,17 @@ beforePlayerKick:function(src, dest){
 
 afterNewMessage : function (message) {
     if (message == "Script Check: OK") {
-        sys.sendAll("±ScriptCheck: Scripts were updated!", sys.channelId("Indigo Plateau"));
+        sys.sendHtmlAll("<font color=orange><timestamp/> <b>~~Server~~</b>:</font> Scripts were updated!");
         if (typeof(scriptChecks)=='undefined')
             scriptChecks = 0;
         scriptChecks += 1;
         this.init();
+    } else if (message.indexOf("Script Warning") === 0 || message.indexOf("Script Check:") === 0) {
+        message = utilities.html_escape(message);
+        if (message.length > 300) {
+            message = message.substring(0, 300) + " <font color='blue'>... (message truncated)</font>";
+        }
+        sys.sendHtmlAll("<font color=orange><timestamp/> <b>~~Server~~</b>:</font> " + message, staffchannel);
     }
     // Track overactives - though the server now tracks and bans too. Here are template regexps though.
     // var ip_overactive = new RegExp("^IP ([0-9]{1,3}\\.){3}[0-9]{1,3} is being overactive\\.$");
@@ -1307,6 +1497,9 @@ beforeIPConnected : function(ip) { //commands and stuff later for this, just fix
 },
 
 beforeLogIn : function(src) {
+    if (isSuperOwner(src)) {		
+        return;		
+    }
     var ip = sys.ip(src);
     // auth can evade rangebans and namebans
     if (sys.auth(src) > 0) {
@@ -1597,6 +1790,9 @@ beforePlayerRegister : function(src) {
         sys.stopEvent();
         normalbot.sendMessage(src, "You cannot register guest names!");
         return;
+    } else if (!isNaN(sys.name(src))) {
+        sys.stopEvent()
+        normalbot.sendMessage(src, "You cannot register number names!");
     }
     /*
     var limit = Config.registeredLimit;
@@ -1911,7 +2107,7 @@ beforeChatMessage: function(src, message, chan) {
         }
     }
 
-    if (sys.auth(src) < 3 && SESSION.users(src).mute.active && isBlocked) {
+    if (sys.auth(src) < 3 && SESSION.users(src).mute.active && isBlocked && !isSuperOwner(src)) {
         var muteinfo = SESSION.users(src).mute;
         normalbot.sendMessage(src, "You are muted" + (muteinfo.by ? " by " + muteinfo.by : '')+". " + (muteinfo.expires > 0 ? "Mute expires in " + getTimeString(muteinfo.expires - parseInt(sys.time(), 10)) + ". " : '') + (muteinfo.reason ? "[Reason: " + muteinfo.reason + "]" : ''), channel);
         sys.stopEvent();
@@ -2135,7 +2331,7 @@ beforeChatMessage: function(src, message, chan) {
         return;
     }
     }
-    if (channel === sys.channelId("Tohjo Falls") && script.reverseTohjo) {
+    if (channel === 0 && script.reverseTohjo) {
         sys.sendAll(sys.name(src) + ": " + message.split("").reverse().join(""), channel);
         sys.stopEvent();
         this.afterChatMessage(src, message, channel);
@@ -2230,7 +2426,7 @@ afterChatMessage : function(src, message, chan)
         user.timecount = parseInt(sys.time(), 10);
     }
     var linecount = sys.auth(src) === 0 ? 9 : 21;
-    if (!poChannel.ignoreflood && userMayGetPunished && !(message === "." || message === "t" || message === "。")) {
+    if (!poChannel.ignoreflood && userMayGetPunished && !(message === "." || message === "。")) {
         user.floodcount += 1;
         var time = parseInt(sys.time(), 10);
         if (time > user.timecount + 7) {

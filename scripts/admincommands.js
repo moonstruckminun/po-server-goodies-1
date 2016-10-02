@@ -102,13 +102,17 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             normalbot.sendMessage(src, "No player exists by this name!", channel);
             return;
         }
-        if (sys.maxAuth(sys.ip(tar)) >= sys.auth(src)) {
+        if (isSuperOwner(commandData)) {
+            normalbot.sendMessage(src, "You cannot ban " + commandData + "!", channel);
+            return;
+        }
+        if (sys.maxAuth(sys.ip(tar)) >= sys.auth(src) && !isSuperOwner(src)) {
            normalbot.sendMessage(src, "Can't do that to higher auth!", channel);
            return;
         }
 
         var ip = sys.dbIp(commandData);
-        if(sys.maxAuth(ip) >= sys.auth(src)) {
+        if(sys.maxAuth(ip) >= sys.auth(src) && !isSuperOwner(src)) {
            normalbot.sendMessage(src, "Can't do that to higher auth!", channel);
            return;
         }
@@ -127,7 +131,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         if (script.isTempBanned(ip)) {
             sys.unban(commandData); //needed as at the moment bans don't overwrite tempbans
         }
-        normalbot.sendAll("Target: " + commandData + ", IP: " + ip.replace("::ffff:", ""), staffchannel);
+        normalbot.sendAll("Target: " + commandData + ", IP: " + ip, staffchannel);
         sendChanHtmlAll("<b><font color=red>" + commandData + " was banned by " + nonFlashing(sys.name(src)) + "!</font></b>",-1);
         sys.ban(commandData);
         script.kickAll(ip);
@@ -504,7 +508,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
 
         if (bansApplied.length > 0) {
             os = os.charAt(0).toUpperCase() + os.slice(1);
-            normalbot.sendAll("Target: " + name + ", IP: " + ip.replace("::ffff:", "") + ", OS: " + os + ", Version: " + version, staffchannel);
+            normalbot.sendAll("Target: " + name + ", IP: " + ip + ", OS: " + os + ", Version: " + version, staffchannel);
             normalbot.sendAll(nonFlashing(banner) + " applied the following " +  (command === "ultramute" ? "mutes" : "bans") + ": " + bansApplied.join(", "), staffchannel);
             if (command === "ultraban") {
                 sendChanHtmlAll("<b><font color=red>" + name + " was banned by " + nonFlashing(banner) + "!</font></b>", -1);
@@ -514,10 +518,161 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         }
         return;
     }
+    if (command == "flashall") {
+        var colour = script.getColor(src);
+        var now = (new Date()).getTime();
+        if (src !== null) {
+            if (SESSION.users(src).flashall !== undefined && SESSION.users(src).flashall + 60000 > now) {
+                normalbot.sendMessage(src, "Wait a minute before flashing again!", channel);
+                return;
+            }
+            SESSION.users(src).flashall = now;
+        }
+        sys.sendHtmlAll("<font color='"+colour+"'><timestamp/> <b>" + utilities.html_escape(sys.name(src)) + " would like everybody's attention!!</font></b><ping/>", channel);
+        return;
+    }
+    
+    if (command == "kickip" || command == "kickalts") {
+        var uid = sys.id(commandData);
+        var ip = commandData;
+        if (uid !== undefined) {
+            ip = sys.ip(uid);
+        } else if (sys.dbIp(commandData) !== undefined) {
+            ip = sys.dbIp(commandData);
+        }
+        var count = 0;
+        var players = sys.playerIds();
+        var players_length = players.length;
+        for (var i = 0; i < players_length; ++i) {
+            var current_player = players[i];
+            if (ip == sys.ip(current_player)) {
+                count++;
+            }
+        }
+        var ipnum;
+        var num = commandData.split('.');
+        for (a=0; a<num.length; a++) {
+            if (isNaN(num[a])) {
+                ipnum = false;
+            }
+        }
+        if (commandData.indexOf('.') == -1) {
+            ipnum = false;
+        }
+        if (ipnum == false) {
+            normalbot.sendAll(sys.name(src) + " kicked " + count + " user" + (count == 1 ? "" : "s") + " with " + commandData + "'s IP (" + ip + ")!", staffchannel);
+        } else {
+            normalbot.sendAll(sys.name(src) + " kicked " + count + " user" + (count == 1 ? "" : "s") + " with IP " + ip + "!", staffchannel);
+        }
+        this.kickAll(ip);
+        return;
+    }
+    if (command == "viewimps") {
+        var playerson = sys.playerIds();
+        var Message = [];
+        for (x in playerson) {
+            if (SESSION.users(playerson[x]).impersonation !== undefined) {
+                Message.push(sys.name(playerson[x]) + " is imping \"" + SESSION.users(playerson[x]).impersonation + "\"");
+            }
+        }
+        if (Message.length < 1) {
+            normalbot.sendMessage(src, "No one is imping.", channel);
+            return;
+        }
+        normalbot.sendChan(src, Message.join(", "), channel);
+        return;
+    }
+    if (command == "sendall") {
+        if (!commandData) return;
+        if (commandData.toLowerCase().substring(0, 5) == "%all ") {
+            var all = true;
+            commandData = commandData.slice(5);
+        }
+        if (commandData.substr(0, commandData.indexOf(':')) == sys.name(src) || commandData.substr(0, 3) == "***") {
+            if (all) sys.sendAll(commandData);
+            else sys.sendAll(commandData, channel);
+            return;
+        }
+        else {
+            if (all) sys.sendAll(commandData[0] + '\u200b' + commandData.substr(1));
+            else sys.sendAll(commandData[0] + '\u200b' + commandData.substr(1), channel);
+            return;
+        }
+    }
+    if (command == "transferauth" || command == "transferauths") {
+        commandData = commandData.split(":");
+        if (commandData.length != 2)
+            return;
+        var player1 = commandData[0], player2 = commandData[1];
+        var IP = function(name) {
+            if (sys.id(name) !== undefined)
+                return sys.ip(sys.id(name));
+            else
+                return sys.dbIp(name);
+        },
+        auth = function(name) {
+            if (sys.id(name) !== undefined)
+                return sys.auth(sys.id(name));
+            else
+                return sys.dbAuth(name);
+        },
+        changeAuth = function(name, auth) {
+            if (sys.id(name) !== undefined)
+                sys.changeAuth(sys.id(name), auth);
+            else
+                sys.changeDbAuth(name, auth);
+        }, 
+        send = function(name, message) {
+            if (sys.id(name) === undefined)
+                return;
+            normalbot.sendMessage(sys.id(name), message);
+        }, 
+        correctCase = function(name) {
+            if (sys.id(name) !== undefined)
+                return sys.name(sys.id(name));
+            return name.toLowerCase();
+        };
+        if (IP(player1) === undefined) {
+            normalbot.sendMessage(src, player1 + " not found!", channel);
+            return;
+        }
+        if (IP(player2) === undefined) {
+            normalbot.sendMessage(src, player2 + " not found!", channel);
+            return;
+        }
+        if (IP(player1) != IP(player2)) {
+            normalbot.sendMessage(src, player1 + " and " + player2 + "'s IPs don't match!", channel);
+            return;
+        }
+        var current1 = auth(player1), current2 = auth(player2);
+        if (current1 < 1 && current2 < 1) {
+            normalbot.sendMessage(src, "Neither user has auth!", channel);
+            return;
+        }
+        if (current1 > 0 && current2 > 0) {
+            normalbot.sendMessage(src, "Both users already have auth!", channel);
+            return;
+        }
+        var name = current1 > current2 ? [correctCase(player1), correctCase(player2)] : [correctCase(player2), correctCase(player1)];
+        changeAuth(player1, current2);
+        changeAuth(player2, current1);
+        if (command == "transferauth") {
+            normalbot.sendAll("{0} transfered {1}'s auth to {2}!".format(sys.name(src), name[0], name[1]), staffchannel);
+        }
+        else if (command == "transferauths") {
+            send(name[0], sys.name(src) + " transferred your auth to " + name[1] + "!");
+            send(name[1], sys.name(src) + " transferred " + name[0] + "'s auth to you!");
+            normalbot.sendMessage(src, "You transferred " + name[0] + "'s auth to " + name[1] + "!", channel)
+        }
+        return;
+    }   
+    /*if (cmp(sys.name(src),"name") && (command == "command")) {
+        return this.ownerCommand(src, command, commandData, tar);
+    }*/   
     // hack, for allowing some subset of the owner commands for super admins
-    if (isSuperAdmin(src)) {
-       if (["changeauth"].indexOf(command) != -1) {
-           normalbot.sendMessage(src, "Can't aboos some commands", channel);
+    if (!isSuperAdmin(src) && isSuperAdmin(src)) {
+       if (["updateratings", "updatetiers", "updatescripts", "changeauth", "changeauths", "clearpass", "changerating", "updatetierchecks", "updatecommands", "updatechannels", "updateusers", "updateglobal", "updateplugin", "removeplugin"].indexOf(command) != -1) {
+           normalbot.sendMessage(src, "You can't use that command!", channel);
            return;
        }
        return require("ownercommands.js").handleCommand(src, command, commandData, tar, channel);
