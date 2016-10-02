@@ -5513,7 +5513,7 @@ function Mafia(mafiachan) {
                 table.push("</table>");
                 sys.sendHtmlMessage(src, table.join(""), channel);
         } else {
-            mafiabot.sendMessage(src, commandData + " has no standing rule violations.", channel);
+            mafiabot.sendMessage(sys.id(src), commandData + " has no standing rule violations.", channel);
         }
     };
     this.myWarns = function (src) {
@@ -5549,7 +5549,7 @@ function Mafia(mafiachan) {
                 table.push("</table>");
                 sys.sendHtmlMessage(src, table.join(""), channel);
         } else {
-            mafiabot.sendMessage(src, "You have no standing rule violations.", channel);
+            mafiabot.sendMessage(sys.id(src), "You have no standing rule violations.", channel);
         }
     };
     this.possibleBotquote = function (mess) {
