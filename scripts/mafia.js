@@ -18,7 +18,7 @@ var nonFlashing = require("utilities.js").non_flashing;
 var html_escape = require("utilities.js").html_escape;
 
 function Mafia(mafiachan) {
-    this.version = "2016-10-02b";
+    this.version = "2016-10-02c";
     var mafia = this;
     var defaultThemeName = "default"; //stored as lowercase
 
@@ -2194,7 +2194,8 @@ function Mafia(mafiachan) {
                 return "<poappend m='" + player + "'>" + player + "</poappend>";
             }).join(", ") + ".";
         for (var i = 0; i < channelUsers.length; i++) {
-            var id = channelUsers[i], name = sys.name(id)
+            var id = channelUsers[i], name = sys.name(id);
+            if (this.isInGame(name)) {
                 gamemsg(name, sys.os(id) === "android" ? listAndroid : listPC, "±Current Players", undefined, true);
             } else {
                 gamemsg(name, players.join(", ") + ".", "±Current Players");
