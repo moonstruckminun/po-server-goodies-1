@@ -18,7 +18,7 @@ var nonFlashing = require("utilities.js").non_flashing;
 var html_escape = require("utilities.js").html_escape;
 
 function Mafia(mafiachan) {
-    this.version = "2016-10-02";
+    this.version = "2016-10-02a";
     var mafia = this;
     var defaultThemeName = "default"; //stored as lowercase
 
@@ -2180,7 +2180,7 @@ function Mafia(mafiachan) {
         for (var i = 0; i < channelUsers.length; i++) {
             var id = channelUsers[i];
             if (sys.isInChannel(id, mafiachan)) {
-                gamemsg(id, sys.os(id) === "android" ? sendAndroid : sendPC, "±Current Roles", undefined, true);
+                gamemsg(sys.name(id), sys.os(id) === "android" ? sendAndroid : sendPC, "±Current Roles", undefined, true);
             }
         }
     };
