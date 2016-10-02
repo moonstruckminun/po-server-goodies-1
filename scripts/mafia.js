@@ -2180,7 +2180,7 @@ function Mafia(mafiachan) {
         for (var i = 0; i < channelUsers.length; i++) {
             var id = channelUsers[i];
             if (sys.isInChannel(id, mafiachan)) {
-                gamemsg(id, sys.os(id) === "android" ? sendAndroid : sendPC, botName, undefined, true);
+                gamemsg(id, sys.os(id) === "android" ? sendAndroid : sendPC, "±Current Roles", undefined, true);
             }
         }
     };
