@@ -1212,7 +1212,7 @@ function Mafia(mafiachan) {
                 throw err;
             }
         }
-        if (for (a in randomSide_list) {
+        for (var a in randomSide_list) {
             sides[randomSide_list[a]] = (randomSide_list[a]);
         }
         this.sideInfo = sides;
