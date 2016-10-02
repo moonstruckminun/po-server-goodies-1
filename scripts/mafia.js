@@ -18,7 +18,7 @@ var nonFlashing = require("utilities.js").non_flashing;
 var html_escape = require("utilities.js").html_escape;
 
 function Mafia(mafiachan) {
-    this.version = "2016-10-02d";
+    this.version = "2016-10-02e";
     var mafia = this;
     var defaultThemeName = "default"; //stored as lowercase
     var mwarns = script.mwarns;
@@ -5424,9 +5424,6 @@ function Mafia(mafiachan) {
         }
         this.clearOldWarnings(name);
         var expirationTime = (new Date()).getTime() + (timeForWarningErase * pts);
-        if (typeof mafia.warningLog[name] !== "object") {
-            mafia.warningLog[name] = {};
-        }
         var ip;
         if (sys.id(name) !== undefined) {
             ip = sys.ip(sys.id(name));
