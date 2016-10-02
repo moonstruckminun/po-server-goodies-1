@@ -2169,11 +2169,11 @@ function Mafia(mafiachan) {
                     var onlistRole = role.actions.onlist,
                         roleName = html_escape(this.theme.trrole(onlistRole)),
                         color = this.theme.sideColor[mafia.theme.roles[onlistRole].side];
-                    return "<posend m='/roles " + mafia.theme.name + ":" + roleName + "' style='color:" + color + "'>" + roleName + "</a>";
+                    return "<posend m='/roles " + mafia.theme.name + ":" + roleName + /*"' style='color:" + color +*/ "'>" + roleName + "</a>";
                 } else {
                     var roleName = html_escape(role.translation),
                         color = this.theme.sideColor[role.side];
-                    return "<posend m='/roles " + mafia.theme.name + ":" + roleName + "' style='color:" + color + "'>" + roleName + "</a>";
+                    return "<posend m='/roles " + mafia.theme.name + ":" + roleName + /*"' style='color:" + color +*/ "'>" + roleName + "</a>";
                 }
             }, mafia).join(", ") + ".";
         var channelUsers = sys.playersOfChannel(mafiachan);
