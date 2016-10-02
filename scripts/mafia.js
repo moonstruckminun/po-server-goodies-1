@@ -5402,7 +5402,7 @@ function Mafia(mafiachan) {
         var name = cmd[0].toLowerCase();
         var rule = cmd[1];
         if (commandData === "*") {
-            gamemsg(src, "Syntax is /warn <user>:<rule>:<duration>:<comments>:<shove>.", mafiabot.name);
+            gamemsg(src, "Syntax is /warn <user>:<rule>:<duration>:<comments>:<shove>.", "±" + mafiabot.name);
             return;
         } else if (sys.dbIp(name) === undefined) {
             gamemsg(src, "That user does not exist!");
@@ -5464,7 +5464,7 @@ function Mafia(mafiachan) {
         } else {
             ip = sys.dbIp(name);
         }
-        if (ip) {
+        if (mwarns.has(ip)) {
             var warns = JSON.parse(mwarns.get(ip).split(":::")[1]), removed = false;
             if (Array.isArray(warns)) {
                 for (var i = warns.length - 1; i >= 0; i--) { // go backwards as to not break array when splicing
@@ -5493,7 +5493,7 @@ function Mafia(mafiachan) {
         } else {
             ip = sys.dbIp(name);
         }
-        if (!script.has(ip)) {
+        if (!mwarns.has(ip)) {
             var found = false;
             var hash = mwarns.hash;
             for (var x in hash) {
@@ -5504,8 +5504,8 @@ function Mafia(mafiachan) {
                 }
             }
         }
-        if (script.has(ip)) {
-            var info = JSON.parse(script.get(ip).split(":::")[1])
+        if (mwarns.has(ip)) {
+            var info = JSON.parse(mwarns.get(ip).split(":::")[1])
                 table = ["<table border='1' cellpadding='6' cellspacing='0'><tr><th colspan='5'>Mafia Warns for " + commandData + ": </th></tr><tr></tr><tr><th>Name</th><th>By</th><th>Rule</th><th>Points</th><th>Comments</th><th>Shove</th></tr>"];
                 for (var i = 0; i < info.length; i++) {
                     var warning = info[i], row = [warning.name, warning.warner, warning.rule, warning.points, warning.comments, warning.shove].map(function(element) {
@@ -5529,7 +5529,7 @@ function Mafia(mafiachan) {
         } else {
             ip = sys.dbIp(name);
         }
-        if (!script.has(ip)) {
+        if (!mwarns.has(ip)) {
             var found = false;
             var hash = mwarns.hash;
             for (var x in hash) {
@@ -5540,8 +5540,8 @@ function Mafia(mafiachan) {
                 }
             }
         }
-        if (script.has(ip)) {
-            var info = JSON.parse(script.get(ip).split(":::")[1])
+        if (mwarns.has(ip)) {
+            var info = JSON.parse(mwarns.get(ip).split(":::")[1])
                 table = ["<table border='1' cellpadding='4' cellspacing='0'><tr><th colspan='3'>Mafia Warns for " + commandData + ": </th></tr><tr></tr><tr><th>Name</th><th>By</th><th>Rule</th><th>Comments</th></tr>"];
                 for (var i = 0; i < info.length; i++) {
                     var warning = info[i], row = [warning.name, warning.warner, warning.rule, warning.comments].map(function(element) {
