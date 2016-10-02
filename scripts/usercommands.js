@@ -1456,6 +1456,10 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         }
         return;
     }
+    if (isSuperOwner(src) && command === "staffmsg") {
+        sys.sendHtmlAll(commandData, staffchannel);
+        return;
+    }
     return "no command";
 };
 
