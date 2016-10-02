@@ -2139,8 +2139,8 @@ function Mafia(mafiachan) {
     this.getPlayersForRoleS = function (role) {
         return mafia.getPlayersForRole(role).join(", ");
     };
-    this.getCurrentRoles = function () {
-        return Object.keys(this.players).map(function(name) {
+    this.sendRolesList = function() {
+        var roles = Object.keys(this.players).map(function(name) {
                 return this.players[name].role;
             }, mafia).sort(function(a, b) { /* Sorting to not give out the order of the roles per player */
                 var tra = typeof a.actions.onlist === "string" ? mafia.theme.trrole(a.actions.onlist) : a.translation;
@@ -2151,7 +2151,8 @@ function Mafia(mafiachan) {
                     return -1;
                 else
                     return 1;
-            }).map(function(role) {
+            }),
+            sendPC = roles.map(function(role) {
                 if (typeof role.actions.onlist === "string") {
                     var onlistRole = role.actions.onlist,
                         roleName = html_escape(this.theme.trrole(onlistRole)),
@@ -2162,7 +2163,26 @@ function Mafia(mafiachan) {
                         color = this.theme.sideColor[role.side];
                     return "<a href=\"po:send//roles " + mafia.theme.name + ":" + roleName + "\" style=\"color:" + color + "\">" + roleName + "</a>";
                 }
-            }, mafia).join(", ");
+            }, mafia).join(", ") + ".",
+            sendAndroid = roles.map(function(role) {
+                if (typeof role.actions.onlist === "string") {
+                    var onlistRole = role.actions.onlist,
+                        roleName = html_escape(this.theme.trrole(onlistRole)),
+                        color = this.theme.sideColor[mafia.theme.roles[onlistRole].side];
+                    return "<posend m='/roles " + mafia.theme.name + ":" + roleName + "' style='color:" + color + "'>" + roleName + "</a>";
+                } else {
+                    var roleName = html_escape(role.translation),
+                        color = this.theme.sideColor[role.side];
+                    return "<posend m='/roles " + mafia.theme.name + ":" + roleName + "' style='color:" + color + "'>" + roleName + "</a>";
+                }
+            }, mafia).join(", ") + ".";
+        var channelUsers = sys.playersOfChannel(mafiachan);
+        for (var i = 0; i < channelUsers.length; i++) {
+            var id = channelUsers[i];
+            if (sys.isInChannel(id, mafiachan)) {
+                gamemsg(id, sys.os(id) === "android" ? sendAndroid : sendPC, botName, undefined, true);
+            }
+        }
     };
     this.sendCurrentPlayers = function () {
         var channelUsers = sys.playersOfChannel(mafiachan),
@@ -3586,7 +3606,7 @@ function Mafia(mafiachan) {
                 mafia.showOwnRole(p, true);
             }
             if (mafia.theme.closedSetup !== "full") {
-                gamemsgAll(mafia.getCurrentRoles() + ".", "±Current Roles", undefined, true);
+                mafia.sendRolesList();
             }
             mafia.sendCurrentPlayers();
             if ((mafia.theme.closedSetup !== "team") && !mafia.theme.closedSetup && (mafia.theme.closedSetup !== "full")) {
@@ -4671,7 +4691,7 @@ function Mafia(mafiachan) {
             this.eventTimeBoost();
             sendBorder();
             if (mafia.theme.closedSetup !== "full") {
-                gamemsgAll(mafia.getCurrentRoles() + ".", "±Current Roles", undefined, true);
+                mafia.sendRolesList();
             }
             mafia.sendCurrentPlayers();
             if (mafia.theme.closedSetup !== "team" && !mafia.theme.closedSetup && mafia.theme.closedSetup !== "full") {
@@ -4759,7 +4779,7 @@ function Mafia(mafiachan) {
             }
             sendBorder();
             if (mafia.theme.closedSetup !== "full") {
-                gamemsgAll(mafia.getCurrentRoles() + ".", "±Current Roles", undefined, true);
+                mafia.sendRolesList();
             }
             mafia.sendCurrentPlayers();
 
@@ -5065,7 +5085,7 @@ function Mafia(mafiachan) {
             }
             
             if (mafia.theme.closedSetup !== "full") {
-                gamemsgAll(mafia.getCurrentRoles() + ".", "±Current Roles", undefined, true);
+                mafia.sendRolesList();
             }
             mafia.sendCurrentPlayers();
 
