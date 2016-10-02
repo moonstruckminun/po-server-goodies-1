@@ -1144,8 +1144,7 @@ function Mafia(mafiachan) {
         this.roleInfo = roles;
     };
     Theme.prototype.generateSideInfo = function () {
-        var sep = "*** *********************************************************************** ***";
-        var sides = [sep];
+        var sides = {};
         var side;
         var side_order = Object.keys(this.sideTranslations);
         var this_sideTranslations = this.sideTranslations;
@@ -1187,7 +1186,8 @@ function Mafia(mafiachan) {
                 if (typeof role.side == "string") {
                     if (side_list[role.side] === undefined)
                         side_list[role.side] = [];
-                    side_list[role.side].push("infoName" in role ? role.infoName : role.translation);
+                    var n = "infoName" in role ? role.infoName : role.translation;
+                    side_list[role.side].push("<a href='/roles " + this.name + ":" + n + "'>" + n + "</a>");
                 } else if (typeof role.side == "object" && role.side.random) {
                     var plop = Object.keys(role.side.random);
                     var tran = [];
@@ -1206,15 +1206,15 @@ function Mafia(mafiachan) {
             try {
                 side = side_order[s];
                 if (side_list[side] !== undefined)
-                    sides.push("±Side: The " + this.trside(side) + (side == "village" ? " (Village)" : "") + " consists of: " + removeDuplicates(side_list[side]).join(", ") + ".");
+                    sides[side] = "±Side: The " + this.trside(side) + (side == "village" ? " (Village)" : "") + " consists of: " + removeDuplicates(side_list[side]).join(", ") + ".";
             } catch (err) {
                 dualBroadcast("Error adding side " + this.trside(side) + "(" + side + ") to /sides");
                 throw err;
             }
         }
-        if (randomSide_list.length > 0)
-            sides = sides.concat(randomSide_list);
-        sides.push(sep);
+        if (for (a in randomSide_list) {
+            sides[randomSide_list[a]] = (randomSide_list[a]);
+        }
         this.sideInfo = sides;
     };
     Theme.prototype.generatePriorityInfo = function () {
@@ -6938,10 +6938,37 @@ function Mafia(mafiachan) {
                 gamemsg(srcname, "No such theme!", false, channel);
                 return;
             }
-            var sides = mafia.themeManager.themes[themeName].sideInfo;
-            dump(src, sides, channel);
+            var sideName = data[1], failed = true;
+            if (sideName !== null) {
+                for (var t in mafia.theme.sideTranslations) {
+                    if (mafia.theme.sideTranslations[t].toLowerCase() == sideName.toLowerCase()) {
+                        sideName = t;
+                        failed = false;
+                        break;
+                    }
+                }
+                if (failed) {
+                    gamemsg(srcname, "No such side in theme " + themeName + "!", false, channel);
+                    return;
+                }
+            }
+            
+            var sides = mafia.themeManager.themes[themeName].sideInfo,
+                sep = "*** *********************************************************************** ***";
+                
+            gamemsg(src, sep, channel);
+            
+            if (sideName !== null) {
+                gamemsg(src, sides[sideName], channel);
+            }
+            else {
+                for (var s in sides) {
+                    gamemsg(src, sides[s], channel);
+                }
+            }
+            
+            gamemsg(src, sep, channel);
             return;
-
         }
         if (command === "myrole") {
             mafia.showOwnRole(src);
