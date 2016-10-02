@@ -295,6 +295,14 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         SESSION.channels(channel).setTopic(src, topic.join(Config.topic_delimiter));
         return;
     }
+    if (command == "floodcheck") {
+        channelbot.sendMessage(src, "Excessive flooding is " + (SESSION.channels(channel).ignoreflood ? "" : "dis") + "allowed.", channel);	
+        return;
+    }
+    if (command == "capscheck") {
+        channelbot.sendMessage(src, "Excessive CAPS-usage is " + (SESSION.channels(channel).ignorecaps ? "" : "dis") + "allowed.", channel);	
+        return;
+    }
 
     if (!poChannel.isChannelOperator(src)) {
         return "no command";

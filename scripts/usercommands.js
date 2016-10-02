@@ -108,7 +108,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         }
         return;
     }
-    if ((command === "me" || command === "rainbow") && !SESSION.channels(channel).muteall) {
+    /*if ((command === "me" || command === "rainbow") && !SESSION.channels(channel).muteall) {
         if (SESSION.channels(channel).meoff) {
             normalbot.sendMessage(src, "/me was turned off.", channel);
             return;
@@ -181,6 +181,286 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             sendChanHtmlAll(toSend.join(""), channel);
         }
         script.afterChatMessage(src, "/" + command + " " + commandData, channel);
+        return;
+    }*/
+    if ((command == "me" || command == "rainbow" || command == "random" || command == "randcolor" || command == "randcolour") && !SESSION.channels(channel).muteall) {
+        if (SESSION.channels(channel).meoff === true) {
+            normalbot.sendMessage(src, "Fun commands were turned off.", channel);
+            return;
+        }
+        if (commandData === undefined)
+            return;
+
+        if (usingBannedWords() || repeatingOneself() || capsName()) {
+            sys.stopEvent();
+            return;
+        }
+        
+        SESSION.channels(channel).beforeMessage(src, "/" + command + " " + commandData);
+        commandData=utilities.html_escape(commandData);
+        var messagetosend = commandData;
+        if (CAPSLOCKDAYALLOW === true) {
+            messagetosend = messagetosend.toUpperCase();
+        }
+        if (command == "me") {
+            var colour = script.getColor(src);
+            if (SESSION.users(src).smute.active) {
+                sys.playerIds().forEach(function(id) {
+                    if (sys.loggedIn(id) && SESSION.users(id).smute.active && sys.isInChannel(id, channel)) {
+                        sys.sendHtmlMessage(id, "<font color='"+colour+"'><timestamp/> *** <b>" + utilities.html_escape(sys.name(src)) + "</b> " + utilities.html_escape(commandData) + "</font>", channel);
+                    }
+                });
+                if (sys.existChannel("Secret Island")) {
+                    sys.sendHtmlAll("<font color='#3daa68'><timestamp/> <b>(#" + sys.channel(channel) + ")</b></font> <font color='"+colour+"'>*** " + utilities.html_escape(sys.name(src)) + " " + utilities.html_escape(commandData) + "</font>", sys.channelId("Secret Island"));
+                }
+                script.afterChatMessage(src, '/'+command+' '+commandData, channel);
+                return;
+            }
+            sys.sendHtmlAll("<font color='"+colour+"'><timestamp/> *** <b>" + utilities.html_escape(sys.name(src)) + "</b> " + messagetosend + "</font>", channel);
+            //script.watchMsg("<font color='"+colour+"'>*** " + utilities.html_escape(sys.name(src)) + " " + utilities.html_escape(commandData) + "</font>", channel, true);
+        } else if ((command == "random" || command == "randcolor" || command == "randcolour") && (!script.isOfficialChan(channel) || sys.auth(src) > 0)) {
+            if (SESSION.global().allowRainbow === false) {
+                normalbot.sendMessage(src, '/' + command + " is disabled!")
+                return;
+            }
+            if (channel === sys.channelId("Trivia") && SESSION.channels(channel).triviaon) {
+                sys.sendMessage(src, "±Trivia: Answer using \\a, /me not allowed now.", channel);
+            }
+            var auth = sys.auth(src) >= 1 && sys.auth(src) < 4;
+            var colours = ["#F85888", "#F08030", "#F8D030", "#78C850", "#98D8D8", "#A890F0", "#C183C1"];
+            var randColour = function() { return colours[sys.rand(0,colours.length-1)]; };
+            var toSend = ["<timestamp/><b>"];
+            if (auth) toSend.push("<span style='color:" + randColour() + "'>+</span><i>");
+            var name = sys.name(src);
+            for (var j = 0; j < name.length; ++j)
+                toSend.push("<span style='color:" + randColour() + "'>" + utilities.html_escape(name[j]) + "</span>");
+            toSend.push("<span style='color:" + randColour() + "'>:</span> ");
+            toSend.push("</b>");
+            if (auth) toSend.push("</i>");
+            toSend.push(messagetosend);
+            if (SESSION.users(src).smute.active) {
+                sys.playerIds().forEach(function(id) {
+                    if (sys.loggedIn(id) && SESSION.users(id).smute.active && sys.isInChannel(id, channel)) {
+                        sys.sendHtmlMessage(id, toSend.join(""), channel);
+                    }
+                });
+                if (sys.existChannel("Secret Island")) {
+                    toSend.splice(0, 1);
+                    toSend.splice(name.length+1, 1);
+                    sys.sendHtmlAll("<font color='#3daa68'><timestamp/> <b>(#" + sys.channel(channel) + ")</b></font> " + toSend.join(""), sys.channelId("Secret Island"));
+                }
+                sys.stopEvent();
+                script.afterChatMessage(src, '/'+command+ ' '+commandData,channel);
+                return;
+            }
+            sys.sendHtmlAll(toSend.join(""), channel);
+            
+            toSend.splice(0, 1);
+            toSend.splice((auth ? name.length+2 : name.length+3), 1);
+            if (auth) {
+                toSend.splice(0, 1);
+                toSend.splice(sys.name(src).length+1, 1)
+            }
+            //script.watchMsg(toSend.join(""), channel, true);
+        }
+        else if (command == "rainbow" && (!script.isOfficialChan(channel) || sys.auth(src) > 0)) {
+            if (SESSION.global().allowRainbow === false) {
+                normalbot.sendMessage(src, '/' + command + " is disabled!")
+                return;
+            }
+            var colors = ["red", "#ff5500", "#ffc400", "green", "blue", "purple"];
+            var toSend = ["<font color='" + script.getColor(src) + "'><timestamp/>" + (sys.auth(src) >= 1 && sys.auth(src) < 4 ? "+<i><b>" : "<b>") + utilities.html_escape(sys.name(src)) + ":" + (sys.auth(src) >= 1 && sys.auth(src) < 4 ? "</i></b>" : "</b>") + "</font> "];
+            for (var j = 0; j < messagetosend.length; ++j)
+                toSend.push("<span style='color:" + colors[j%colors.length] + "'>" + utilities.html_escape(messagetosend[j]) + "</span>");
+            toSend.push("</b>");
+            sys.sendHtmlAll(toSend.join(""), channel);
+            //script.watchMsg(toSend.join("").replace("<timestamp/>", "").replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "").replace("+", ""), channel, true);
+        }
+        script.afterChatMessage(src, "/" + command + " " + commandData, channel);
+        return;
+    }
+    if (command == "future") {
+        if (SESSION.channels(channel).meoff === true) {
+            normalbot.sendMessage(src, "Fun commands were turned off.", channel);
+            return;
+        }
+        if (SESSION.channels(channel).muteall && !SESSION.channels(channel).isChannelOperator(src) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "Respect the minutes of silence!", channel);
+            return;
+        }
+        if (script.isOfficialChan(channel) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "You cannot do that here!", channel);
+            return;
+        }
+        if (SESSION.users(src).smute.active) {
+            return "no command";
+        }
+        if (!isNonNegative(SESSION.users(src).futureusage)) {
+            SESSION.users(src).futureusage = 0;
+        }
+        if (SESSION.users(src).futureusage > sys.getVal('futurelimit')) {
+            countbot.sendMessage(src, "Sorry, but you have reached the future limit. Please wait for your number of pending futures to decrease.", channel)
+            return;
+        }
+        if (commandData == undefined || commandData.indexOf(":") == -1 || commandData.split(":")[0] == "") {
+            normalbot.sendMessage(src, "Proper usage is /future time:message!", channel);
+            return;
+        }
+
+        var message = commandData.slice(commandData.indexOf(":")+1);
+        var time = getSeconds(commandData.split(":")[0]);
+        var timeString = getTimeString(time);
+        if (!isNonNegative(time)) {
+            normalbot.sendMessage(src, "Please enter a valid time!", channel)
+            return;
+        }
+        if (time > 86400) {
+            countbot.sendMessage(src, "You cannot send a message more than 1 day into the future!", channel);
+            return;
+        }
+        var colour = script.getColor(src);
+        normalbot.sendMessage(src, "Your message has been sent " + timeString + " into the future!", channel);
+        SESSION.users(src).futureusage++;
+        var futuremessage;
+        if (sys.auth(src) >= 1 && sys.auth(src) <= 3) {
+            futuremessage = "<font color="+colour+"> <timestamp/>"+" +<i><b>"+utilities.html_escape(sys.name(src))+":</b></i></font> "+utilities.html_escape(message)+"<b><i><small> (sent "+timeString+" ago) </small></i></b>";
+        } else {
+            futuremessage = "<font color="+colour+"> <timestamp/>"+" <b>"+utilities.html_escape(sys.name(src))+":</b></font> "+utilities.html_escape(message)+"<b><i><small> (sent "+timeString+" ago) </small></i></b>";
+        }
+        var chan = channel;
+        var auth = sys.auth(src);
+        if (SESSION.channels(channel).isChannelOperator(src)) {
+            auth = 1;
+        }
+        var futurefunction = function() {
+            if (sys.channel(chan) !== undefined && (SESSION.channels(chan).muteall === false || auth > 0)) {
+                sys.sendHtmlAll(futuremessage, chan);
+            }
+            SESSION.users(src).futureusage--;	
+        };
+        sys.delayedCall(futurefunction, time);
+        sys.appendToFile('futuremessagelogs.txt', "(" + new Date() + ") Name: " + sys.name(src) + ", Message: " + message + ", Channel: " + sys.channel(chan) + ", Delay time: " + timeString + "\n");
+        return;
+    }
+    if (command == "futuremessages") {
+        if (!isNonNegative(SESSION.users(src).futureusage)) {
+            normalbot.sendAll(src, "You have no future messages pending.", channel);
+            return;
+        }
+        normalbot.sendMessage(src, "You have " + SESSION.users(src).futureusage + " future messages pending.", channel);
+        return;
+    }
+    if (command == "futurelimit") {
+        normalbot.sendMessage(src, "The future limit is " + sys.getVal('futurelimit'), channel);
+        return;
+    }
+    if (["roulette", "spin", "chance", "roll"].indexOf(command) > -1) {
+        if (SESSION.channels(channel).meoff === true) {
+            normalbot.sendMessage(src, "Fun commands were turned off.", channel);
+            return;
+        }
+        if (SESSION.channels(channel).muteall && !SESSION.channels(channel).isChannelOperator(src) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "Respect the minutes of silence!", channel);
+            return;
+        }
+        if (script.isOfficialChan(channel) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "You cannot do that here!", channel);
+            return;
+        }
+        var r = sys.rand(1, 722);
+        var i = sys.rand(1, 244);
+        var n = sys.rand(0, 25);
+        var Message = ["<font color='#3daa68'> <timestamp/> <b>±"+command[0].toUpperCase()+command.slice(1).toLowerCase()+":</b></font> "];
+        Message.push(utilities.html_escape(sys.name(src)) + " obtained ");
+        Message.push((checkVowel(sys.nature(n).charAt(0)) ? "an" : "a") + " <font color='green'>"+sys.nature(n)+"</font> ");
+        Message.push("<font color='blue'>" + sys.pokemon(r) + "</font> ");
+        Message.push("holding " + (checkVowel(sys.item(i).charAt(0)) ? "an" : "a") + " <font color='red'>"+sys.item(i)+"</font>! ");
+        Message.push("<img src='icon:"+r+"'/> ");
+        Message.push("<img src='item:"+i+"'/>");
+        if (SESSION.users(src).smute.active) {
+            sys.playerIds().forEach(function(id) {
+                if (sys.loggedIn(id) && SESSION.users(id).smute.active && sys.isInChannel(id, channel)) {
+                    sys.sendHtmlMessage(id, Message.join(""), channel);
+                }
+            });
+            sys.stopEvent();
+            script.afterChatMessage(src, '/'+command+ ' '+commandData,channel);
+            return;
+        }
+        sys.sendHtmlAll(Message.join(""), channel);
+        return;
+    }
+    if (command == "attack") {
+        if (SESSION.channels(channel).muteall && !SESSION.channels(channel).isChannelOperator(src) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "Respect the minutes of silence!", channel);
+            return;
+        }
+        if (script.isOfficialChan(channel) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "You cannot do that here!", channel);
+            return;
+        }
+        var r = sys.rand(1, 622);
+        var move = sys.move(r);
+        var colour = script.getColor(src);
+        if (SESSION.users(src).smute.active) {
+            sys.playerIds().forEach(function(id) {
+                if (sys.loggedIn(id) && SESSION.users(id).smute.active && sys.isInChannel(id, channel)) {
+                    sys.sendHtmlMessage(id, "<font color='"+colour+"'><timestamp/> <b>*** " + utilities.html_escape(sys.name(src)) + "</b></font> used <font color=red><b>" + move + "</b></font>" + (commandData === undefined ? "!" : " on <font color=blue><b>"+utilities.html_escape(commandData)) + "</b></font>!", channel)
+                }
+            });
+            if (sys.existChannel("Secret Island")) {
+                sys.sendHtmlAll("<font color='#3daa68'><timestamp/> <b>(#" + sys.channel(channel) + ")</b></font> <font color="+colour+"> *** " + utilities.html_escape(sys.name(src)) + "</b></font> used <font color=red>" + move + "</font>" + (commandData === undefined ? "!" : " on <font color=blue>"+utilities.html_escape(commandData)) + "</font>!", sys.channelId("Secret Island"));
+            }
+            sys.stopEvent();
+            script.afterChatMessage(src, '/'+command+ ' '+commandData,channel);
+            return;
+        }
+        sys.sendHtmlAll("<font color='"+colour+"'><timestamp/> <b>*** " + utilities.html_escape(sys.name(src)) + "</b></font> used <font color=red><b>" + move + "</b></font>" + (commandData === undefined ? "!" : " on <font color=blue><b>"+utilities.html_escape(commandData)) + "</b></font>!", channel)
+        return;
+    }
+    if (command == "speakas" || command == "impersonate") {
+        if (!commandData) return;
+        var name = commandData.split(":")[0]; 
+        var message = commandData.slice(commandData.indexOf(":")+1);
+        var color = script.getColor(src);
+        if (SESSION.channels(channel).meoff === true) {
+            normalbot.sendMessage(src, "Fun commands were turned off.", channel);
+            return;
+        }
+        if (SESSION.channels(channel).muteall && !SESSION.channels(channel).isChannelOperator(src) && sys.auth(src) === 0) {
+            normalbot.sendMessage(src, "Respect the minutes of silence!", channel);
+            return;
+        }
+        if (channel == mafiachan) {
+            normalbot.sendMessage(src, "You can't do that here!", channel)
+            return;
+        }
+        if (name.length > 20){
+            normalbot.sendMessage(src, "The name you impersonate cannot have more than 20 characters!", channel);
+            return;
+        }
+        if (CAPSLOCKDAYALLOW === true) {
+            message = message.toUpperCase();
+        }
+        if (SESSION.users(src).smute.active) {
+            sys.playerIds().forEach(function(id) {
+                if (sys.loggedIn(id) && SESSION.users(id).smute.active && sys.isInChannel(id, channel)) {
+                    sys.sendHtmlMessage(id, "<font color ="+color+"><timestamp/><b>" + utilities.html_escape(name) + ": </b></font> " + utilities.html_escape(message) + " <b><i><small> Impersonation by " + sys.name(src) + "</small></i></b>", channel);
+                }
+            });
+            if (sys.existChannel("Secret Island")) {
+                sys.sendHtmlAll("<font color='#3daa68'><timestamp/> <b>(#" + sys.channel(channel) + ")</b></font> <font color="+color+">" + utilities.html_escape(name) + ":</font> " + utilities.html_escape(message) + " <i><small> Impersonation by " + sys.name(src) + "</small></i>", sys.channelId("Secret Island"));
+            }
+            sys.stopEvent();
+            script.afterChatMessage(src, '/'+command+ ' '+commandData,channel);
+            return;
+        }
+        //script.watchMsg("<font color="+color+">" + utilities.html_escape(name) + ":</font> " + utilities.html_escape(message) + " <i><small> Impersonation by " + sys.name(src) + "</small></i>", channel, true);
+        if (sys.auth(src) >= 1 && sys.auth(src) < 4) {
+            sys.sendHtmlAll("<font color ="+color+"><timestamp/>+<b><i>" + utilities.html_escape(name) + ":</i> </b></font> " + utilities.html_escape(message) + " <b><i><small> Impersonation by " + sys.name(src) + "</small></i></b>", channel);
+            return;
+        }
+        sys.sendHtmlAll("<font color ="+color+"><timestamp/><b>" + utilities.html_escape(name) + ": </b></font> " + utilities.html_escape(message) + " <b><i><small> Impersonation by " + sys.name(src) + "</small></i></b>", channel);
         return;
     }
     if (command === "contributors") {
@@ -346,7 +626,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         }
         return;
     }
-    if (command === "auth") {
+    /*if (command === "auth") {
         var doNotShow = ["[ld]jirachier", "blinky"];
         var filterByAuth = function (level) {
             return function (name) {
@@ -400,6 +680,141 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             authListArray.filter(filterByAuth(1)).forEach(printOnlineOffline);
         }
         sys.sendMessage(src, '', channel);
+        return;
+    }*/
+    if (command == "auth") {
+        var DoNotShowIfOffline = Config.doNotShowIfOffline.map(function(name) { return name.toLowerCase(); });
+        var authlist = sys.dbAuths().sort();
+        if(commandData == "owners") {
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color="green">*** <b>OWNERS</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 3) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        if (DoNotShowIfOffline.indexOf(authlist[x]) == -1)
+                        sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/oAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/oAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "",channel);
+        }
+        if(commandData == "admins" || commandData == "administrators") {
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color = "red">*** <b>ADMINISTRATORS</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 2) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        if (DoNotShowIfOffline.indexOf(authlist[x]) == -1)
+                        sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/aAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/aAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "",channel);
+        }
+        if(commandData == "mods" || commandData == "moderators") {
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color = "blue">*** <b>MODERATORS</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 1) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        if (DoNotShowIfOffline.indexOf(authlist[x]) == -1)
+                        sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/mAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/mAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "",channel);
+        }
+        
+        if((commandData == "4" || commandData == "four") && (sys.auth(src) >= 3 || isSuperAdmin(src))) {
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color=#ff5500>*** <b>AUTH 4</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 4) {
+                    if(sys.id(authlist[x]) == undefined) {
+                      sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/uAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/uAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "",channel);
+        }
+        if((commandData == "hidden") && isSuperOwner(src)) {
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color=#aa5500>*** <b>HIDDEN AUTH</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) >= 5) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        sys.sendHtmlMessage(src, '<timestamp/> ' + hAway + " " + utilities.html_escape(authlist[x]) + ' <b>['+sys.dbAuth(authlist[x])+']</b>',channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> ' + hAvailable + " " + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font> ['+sys.dbAuth(sys.name(sys.id(authlist[x])))+']</b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "",channel);
+        }
+
+        if(commandData != "moderators" && commandData != "mods" && commandData != "administrators" && commandData != "admins" && commandData != "owners" && commandData != "4" && commandData != "four" && commandData != "hidden") {
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color="green">*** <b>OWNERS</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 3) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        if (DoNotShowIfOffline.indexOf(authlist[x]) == -1)
+                        sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/oAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/oAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color = "red">*** <b>ADMINISTRATORS</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 2) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        if (DoNotShowIfOffline.indexOf(authlist[x]) == -1)
+                        sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/aAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/aAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>',channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "", channel);
+            sys.sendHtmlMessage(src, '<timestamp/> <font color = "blue">*** <b>MODERATORS</b> ***</font>',channel)
+            for(x in authlist) {
+                if(sys.dbAuth(authlist[x]) == 1) {
+                    if(sys.id(authlist[x]) == undefined) {
+                        if (DoNotShowIfOffline.indexOf(authlist[x]) == -1)
+                        sys.sendHtmlMessage(src, '<timestamp/> <img src="themes/classic/client/mAway.png"width="15"height="15"> '+ utilities.html_escape(authlist[x]),channel)
+                    }
+                    if(sys.id(authlist[x]) != undefined) {
+                        var colour = script.getColor((sys.id(authlist[x])));
+                        sys.sendHtmlMessage(src, '<timestamp/><b><font color='+colour+'> <img src="themes/classic/client/mAvailable.png"width="15"height="15"> ' + utilities.html_escape(sys.name(sys.id(authlist[x]))) + '</font></b>', channel)
+                    }
+                }
+            }
+            sys.sendMessage(src, "", channel);
+        }
         return;
     }
     if (command === "sametier") {
@@ -477,7 +892,11 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         sys.sendNetworkCommand(src, 14); // make the register button active again
         return;
     }
-    if (command === "importable") {
+    if (command == "importable") {
+        normalbot.sendMessage(src, "This command currently doesn't function", channel);
+        return;
+    }
+    /*if (command === "importable") {
         var teamNumber = 0;
         if (!isNaN(commandData) && commandData >= 0 && commandData < sys.teamCount(src)) {
             teamNumber = commandData;
@@ -487,7 +906,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         sys.writeToFile("usage_stats/formatted/team/" + fileName, team);
         normalbot.sendMessage(src, "Your team can be found here: http://server.pokemon-online.eu/team/" + fileName + " Remember this will be deleted in 24 hours", channel);
         return;
-    }
+    }*/
     if (command === "cjoin") {
         if (commandData === undefined) {
             normalbot.sendMessage(src, "Please enter a channel name after the command.", channel);
