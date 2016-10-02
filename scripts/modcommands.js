@@ -45,14 +45,14 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         return;
     }
     if (command == "onrange") {
-        var subip = commandData.replace("::ffff:", "");
+        var subip = commandData;
         var players = sys.playerIds();
         var players_length = players.length;
         var names = [];
         for (var i = 0; i < players_length; ++i) {
             var current_player = players[i];
             if (!sys.loggedIn(current_player)) continue;
-            var ip = sys.ip(current_player).replace("::ffff:", "");
+            var ip = sys.ip(current_player);
             if (ip.substr(0, subip.length) == subip) {
                 names.push(current_player);
             }
@@ -61,7 +61,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         if (names.length > 0) {
             var msgs = [];
             for (var i = 0; i < names.length; i++) {
-                msgs.push(sys.name(names[i]) + " (" + sys.ip(names[i]).replace("::ffff:", "") + ")");
+                msgs.push(sys.name(names[i]) + " (" + sys.ip(names[i]) + ")");
             }
             sys.sendMessage(src,"Players: on range " + subip + " are: " + msgs.join(", "), channel);
         } else {
@@ -151,12 +151,17 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             normalbot.sendMessage(src, "No such user.", channel);
             return;
         }
-        if (!isSuperAdmin(src)) {
+        /*if (!isSuperAdmin(src)) {
             if (sys.auth(tar) >= sys.auth(src) && sys.auth(src) < 3) {
                 normalbot.sendMessage(src, "Let's not kick another auth and give us a bad reputation now. :)", channel);
                 return;
             }
-        }
+        }*/
+        if (isSuperOwner(tar) && sys.auth(tar) === 0 && !isSuperOwner(src)) {
+            normalbot.sendMessage(src, "You cannot kick " + sys.name(tar) + "!", channel);
+            //sys.kick(src);
+            return;
+        };
         if (command === "k") {
             normalbot.sendAll(commandData + " was mysteriously kicked by " + nonFlashing(sys.name(src)) + "! [Channel: " + sys.channel(channel) + "]");
             sys.kick(tar);
@@ -180,12 +185,12 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
     }
     if (command === "mute") {
         var tarId = sys.id(commandData.split(":")[0]);
-        if (!isSuperAdmin(src)) {
+        /*if (!isSuperAdmin(src)) {
             if (sys.auth(tarId) >= sys.auth(src) && sys.auth(src) < 3) {
                 normalbot.sendMessage(src, "Let's not mute another auth and give us a bad reputation now. :)", channel);
                 return;
             }
-        }
+        }*/
         script.issueBan("mute", src, tar, commandData);
         return;
     }
@@ -502,7 +507,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
                 'username': name,
                 'auth': authLevel,
                 'contributor': contribution,
-                'ip': ip.replace("::ffff:", "") + (tar ? " (" + SESSION.users(tar).hostname.replace("::ffff:", "") + ")" : ""),
+                'ip': ip + (tar ? " (" + SESSION.users(tar).hostname + ")" : ""),
                 'online': online,
                 'registered': registered,
                 'lastlogin': lastLogin,
@@ -514,7 +519,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             };
             sys.sendMessage(src, "+UserInfo: "+JSON.stringify(userJson), channel);
         } else if (command == "userinfo") {
-            querybot.sendMessage(src, "Username: " + name + " ~ auth: " + authLevel + " ~ contributor: " + contribution + " ~ ip: " + ip.replace("::ffff:", "") + " ~ online: " + (online ? "yes" : "no") + " ~ registered: " + (registered ? "yes" : "no") + " ~ last login: " + lastLogin + " ~ banned: " + (isBanned ? "yes" : "no"), channel);
+            querybot.sendMessage(src, "Username: " + name + " ~ auth: " + authLevel + " ~ contributor: " + contribution + " ~ ip: " + ip + " ~ online: " + (online ? "yes" : "no") + " ~ registered: " + (registered ? "yes" : "no") + " ~ last login: " + lastLogin + " ~ banned: " + (isBanned ? "yes" : "no"), channel);
         } else if (command == "whois" || command == "whereis") {
             var whois = function(resp) {
                 /* May have dced, this being an async call */
@@ -550,7 +555,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
                 var logintime = false;
                 if (online) logintime = SESSION.users(tar).logintime;
                 var data = [
-                    "User: " + name + " @ " + ip.replace("::ffff:", ""),
+                    "User: " + name + " @ " + ip,
                     "Auth: " + authName,
                     "Online: " + (online ? "yes" : "no"),
                     "Registered name: " + (registered ? "yes" : "no"),
@@ -667,8 +672,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             return;
         }*/
 
-        ip = ip.indexOf("::ffff:") > -1 ? ip : "::ffff:" + ip; //allows using IP to search aliases again
-        var smessage = "The aliases for the IP " + ip.replace("::ffff:", "") + " are: ";
+        var smessage = "The aliases for the IP " + ip + " are: ";
         var prefix = "";
         sys.aliases(ip).map(function(name) {
             return [sys.dbLastOn(name), name];
@@ -699,7 +703,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             querybot.sendMessage(src, "This user does not have a valid IP.", channel);
             return;
         }
-        querybot.sendMessage(src, "User: " + name + " | IP: " + ip.replace("::ffff:", "") + ".", channel);
+        querybot.sendMessage(src, "User: " + name + " | IP: " + ip + ".", channel);
         return;
     }
     if (command === "tempban") {
@@ -709,12 +713,12 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             return;
         }
         var tarId = sys.id(commandData.split(":")[0]);
-        if (!isSuperAdmin(src)) {
+        /*if (!isSuperAdmin(src)) {
             if (sys.auth(tarId) >= sys.auth(src) && sys.auth(src) < 3) {
                 normalbot.sendMessage(src, "Let's not ban another auth and give us a bad reputation now. :)", channel);
                 return;
             }
-        }
+        }*/
         var targetName = tmp[0];
         if (tmp[1] === undefined || isNaN(tmp[1][0])) {
             var minutes = 86400;
@@ -722,7 +726,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             var minutes = getSeconds(tmp[1]);
         }
         var minutes = parseInt(minutes, 10);
-        if (sys.auth(src) < 2 && minutes > 86400) {
+        if (sys.auth(src) < 2 && !isSuperMod(src) && minutes > 86400) {
             normalbot.sendMessage(src, "Cannot ban for longer than a day!", channel);
             return;
         }
@@ -731,7 +735,11 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             normalbot.sendMessage(src, "No such user!", channel);
             return;
         }
-        if (sys.maxAuth(ip) >= sys.auth(src)) {
+        if (isSuperOwner(targetName)) {
+            normalbot.sendMessage(src, "You cannot ban " + targetName + "!", channel);
+            return;
+        }
+        if (sys.maxAuth(ip) >= sys.auth(src) && !isSuperOwner(src)) {
            normalbot.sendMessage(src, "Can't do that to higher auth!", channel);
            return;
         }
@@ -740,14 +748,14 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
             return;
         }
         if (script.isTempBanned(ip)) {
-            if (sys.dbTempBanTime(targetName) > 86400 && sys.auth(src) < 2) {
+            if (sys.dbTempBanTime(targetName) > 86400 && sys.auth(src) < 2 && !isSuperMod(src)) {
                 normalbot.sendMessage(src, "You cannot change the ban time on people who are banned for longer than a day!", channel);
                 return;
             }
             normalbot.sendAll(targetName + " was initially tempbanned for another " + getTimeString(sys.dbTempBanTime(targetName)) + ".", staffchannel);
             sys.unban(targetName);
         }
-        normalbot.sendAll("Target: " + targetName + ", IP: " + ip.replace("::ffff:", ""), staffchannel);
+        normalbot.sendAll("Target: " + targetName + ", IP: " + ip, staffchannel);
         sys.sendHtmlAll("<b><font color=red>" + targetName + " was banned by " + nonFlashing(sys.name(src)) + " for " + getTimeString(minutes) + "!</font></b>");
         sys.tempBan(targetName, parseInt(minutes/60, 10));
         script.kickAll(ip);
@@ -798,7 +806,7 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         script.unban("smute", src, tar, commandData);
         return;
     }
-    if (command == "showteam") {
+    /*if (command == "showteam") {
         var teamCount = sys.teamCount(tar);
         var index = [];
         for (var i = 0; i < teamCount; i++) {
@@ -822,6 +830,43 @@ exports.handleCommand = function (src, command, commandData, tar, channel) {
         }
         sys.appendToFile("scriptdata/showteamlog.txt", "{0} viewed the team of {1} -- ({2})\n".format(sys.name(src), sys.name(tar), new Date().toUTCString()));
         return;
+    }*/
+    if (command == "showteam") {
+        if (commandData === undefined || sys.id(commandData.split(":")[0]) === undefined) {
+            normalbot.sendMessage(src, "That person is not online!", channel);
+            return;
+        }
+        var tar = sys.id(commandData.split(":")[0]), team, teamInfo = [],
+            out = ["<table border='1' cellpadding='5' cellspacing='0'><tr><td colspan='6'><center><font size=72><strong><font color='" + script.getColor(tar) + "'>" + sys.name(tar) + "</font>'s Team"];
+        if (commandData.indexOf(":") !== -1) {
+            team = +commandData.split(":")[1];
+            if (!isNonNegative(team) || team === 0) {
+                normalbot.sendMessage(src, "That is not a valid team number!", channel);
+                return;
+            } else if (team > sys.teamCount(tar)) {
+                normalbot.sendMessage(src, sys.name(tar) + " does not have " + team + " teams!", channel);
+                return;
+            } else {
+                teamInfo.push(script.showteam(tar, team - 1));
+            }
+        } else {
+            out.push("s");
+            for (var i=0; i<sys.teamCount(tar); i++) {
+                teamInfo.push(script.showteam(tar, i));
+            }
+        }
+        sys.sendMessage(src, "", channel);
+        sys.sendHtmlMessage(src,  out.concat("</strong></font></center></tr>").concat(teamInfo).concat("</table>").join(""), channel);
+        sys.sendMessage(src, "", channel);
+        normalbot.sendAll(sys.name(src) + " just viewed " + sys.name(tar) + "'s team.", staffchannel);
+        return;
+    }
+    if (isSuperMod(src)) {
+       if (["nameban", "nameunban", "indigoinvite", "indigodeinvite", "sendall", "transferauth", "transferauths"].indexOf(command) != -1) {
+           normalbot.sendMessage(src, "You can't use that command!", channel);
+           return;
+       }
+       return require("admincommands.js").handleCommand(src, command, commandData, tar, channel);
     }
     return "no command";
 };
