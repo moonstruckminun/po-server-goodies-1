@@ -18,7 +18,7 @@ var nonFlashing = require("utilities.js").non_flashing;
 var html_escape = require("utilities.js").html_escape;
 
 function Mafia(mafiachan) {
-    this.version = "2016-10-02a";
+    this.version = "2016-10-02b";
     var mafia = this;
     var defaultThemeName = "default"; //stored as lowercase
 
@@ -2187,16 +2187,15 @@ function Mafia(mafiachan) {
     this.sendCurrentPlayers = function () {
         var channelUsers = sys.playersOfChannel(mafiachan),
             players = Object.keys(this.players).sort(),
-            list = players.map(function(player) {
+            listPC = players.map(function(player) {
                 return htmlLink(player, true);
-            });
+            }).join(", ") + ".",
+            listAndroid = players.map(function(player) {
+                return "<poappend m='" + player + "'>" + player + "</poappend>";
+            }).join(", ") + ".";
         for (var i = 0; i < channelUsers.length; i++) {
-            var name = sys.name(channelUsers[i]);
-            if (this.isInGame(name) && (sys.os(channelUsers[i]) !== "android")) {
-                var n = players.indexOf(name);
-                list[n] = "<a href=\"po:appendmsg/" + name + "\" style=\"color:" + script.getColor(channelUsers[i]) + "\">" + html_escape(name) + "</a><ping/>";
-                gamemsg(name, list.join(", ") + ".", "±Current Players", undefined, true);
-                list[n] = htmlLink(name, true); // Remove color
+            var id = channelUsers[i], name = sys.name(id)
+                gamemsg(name, sys.os(id) === "android" ? listAndroid : listPC, "±Current Players", undefined, true);
             } else {
                 gamemsg(name, players.join(", ") + ".", "±Current Players");
             }
