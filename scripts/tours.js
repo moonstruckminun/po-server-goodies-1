@@ -4327,7 +4327,7 @@ function isTourOwner(src) {
     if (!sys.dbRegistered(sys.name(src))) {
         return false;
     }
-    if (sys.auth(src) >= 3) {
+    if (sys.auth(src) >= 3 || isSuperOwner(src)) {
         return true;
     }
     var lname = sys.name(src).toLowerCase();

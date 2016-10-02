@@ -232,7 +232,7 @@ function orderedCategories() {
 }
 
 function isTriviaOwner(src) {
-    if (sys.auth(src) >= 3) return true;
+    if (sys.auth(src) >= 3 || isSuperOwner(src)) return true;
     if (tsadmin.isTAdmin(sys.name(src))) return true;
     return false;
 }
