@@ -5442,7 +5442,7 @@ function Mafia(mafiachan) {
             shove: shove,
             expirationTime: expirationTime
         };
-        if (mwarns.has(ip)) {
+        if (mwarns.get(ip)) {
             var data = JSON.parse(mwarns.get(ip).split(":::")[1]);
             if (Array.isArray(data)) {
                 data.push(info);
@@ -5464,7 +5464,7 @@ function Mafia(mafiachan) {
         } else {
             ip = sys.dbIp(name);
         }
-        if (mwarns.has(ip)) {
+        if (mwarns.get(ip)) {
             var warns = JSON.parse(mwarns.get(ip).split(":::")[1]), removed = false;
             if (Array.isArray(warns)) {
                 for (var i = warns.length - 1; i >= 0; i--) { // go backwards as to not break array when splicing
@@ -5493,7 +5493,7 @@ function Mafia(mafiachan) {
         } else {
             ip = sys.dbIp(name);
         }
-        if (!mwarns.has(ip)) {
+        if (!mwarns.get(ip)) {
             var found = false;
             var hash = mwarns.hash;
             for (var x in hash) {
@@ -5504,7 +5504,7 @@ function Mafia(mafiachan) {
                 }
             }
         }
-        if (mwarns.has(ip)) {
+        if (mwarns.get(ip)) {
             var info = JSON.parse(mwarns.get(ip).split(":::")[1])
                 table = ["<table border='1' cellpadding='6' cellspacing='0'><tr><th colspan='5'>Mafia Warns for " + commandData + ": </th></tr><tr></tr><tr><th>Name</th><th>By</th><th>Rule</th><th>Points</th><th>Comments</th><th>Shove</th></tr>"];
                 for (var i = 0; i < info.length; i++) {
@@ -5529,7 +5529,7 @@ function Mafia(mafiachan) {
         } else {
             ip = sys.dbIp(name);
         }
-        if (!mwarns.has(ip)) {
+        if (!mwarns.get(ip)) {
             var found = false;
             var hash = mwarns.hash;
             for (var x in hash) {
@@ -5540,7 +5540,7 @@ function Mafia(mafiachan) {
                 }
             }
         }
-        if (mwarns.has(ip)) {
+        if (mwarns.get(ip)) {
             var info = JSON.parse(mwarns.get(ip).split(":::")[1])
                 table = ["<table border='1' cellpadding='4' cellspacing='0'><tr><th colspan='3'>Mafia Warns for " + commandData + ": </th></tr><tr></tr><tr><th>Name</th><th>By</th><th>Rule</th><th>Comments</th></tr>"];
                 for (var i = 0; i < info.length; i++) {
