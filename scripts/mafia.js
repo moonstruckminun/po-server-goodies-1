@@ -200,7 +200,7 @@ function Mafia(mafiachan) {
     function colorizeRole(r) {
 		var role = mafia.theme.roles[r];
 		if (!role) {
-		    return r;
+		    return r
 		}
 		var tr = role.translation;
 		/* disabling this for now, maybe add once android has color and give users option to disable.
@@ -1376,6 +1376,25 @@ function Mafia(mafiachan) {
         if (state in player.role.actions) {
             var data = player.role.actions[state];
             for (var c in data) {
+                if (data[c].hasOwnProperty("macro")) {
+                    if (data[c].macro) {
+                        if (sys.os(player) === "android") {
+                            cmds.push("/" + c);
+                        }
+                        else {
+                            cmds.push(htmlLink("/" + c));
+                        }
+                    }
+                    continue;
+                }
+                if (mafia.theme.macro) {
+                    if (sys.os(player) === "android") {
+                        cmds.push("/" + c);
+                    }
+                    else {
+                        cmds.push(htmlLink("/" + c));
+                    }
+                }
             }
         }
         return cmds.length > 0 ? "Your commands are: " + readable(cmds, "and") + "." : null;
@@ -2198,6 +2217,15 @@ function Mafia(mafiachan) {
                 return htmlLink(player, true);
             });
         for (var i = 0; i < channelUsers.length; i++) {
+            var name = sys.name(channelUsers[i]);
+            if (this.isInGame(name) && (sys.os(channelUsers[i]) !== "android")) {
+                var n = players.indexOf(name);
+                list[n] = "<a href=\"po:appendmsg/" + name + "\" style=\"color:" + script.getColor(channelUsers[i]) + "\">" + html_escape(name) + "</a><ping/>";
+                gamemsg(name, list.join(", ") + ".", "±Current Players", undefined, true);
+                list[n] = htmlLink(name, true); // Remove color
+            } else {
+                gamemsg(name, players.join(", ") + ".", "±Current Players");
+            }
         }
     };
     this.getPlayersForBroadcast = function () {
