@@ -1045,7 +1045,7 @@ function mafiaChecker() {
                     }
                 }
                 if (checkType(role.actions.voteHax, ["object"], act + ".voteHax")) {
-                    checkType(role.actions.voteHax.msg, ["string"], comm + ".voteHax.msg");
+                    checkType(role.actions.voteHax.msg, ["string"], comm + ".voteHax.string");
                     checkType(role.actions.voteHax.chance, ["number"], comm + ".voteHax.chance");
                 }
                 if (checkType(role.actions.daykill, ["object", "string"], act + ".daykill")) {
