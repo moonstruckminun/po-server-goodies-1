@@ -146,7 +146,7 @@ function Mafia(mafiachan) {
             sys.sendMessage(id, mess, channel);
         } else {
             var colon = mess.indexOf(": ");
-            if (mess.substring(0, Config.Mafia.max_name_length + 2).indexOf(": ") <= Config.Mafia.max_name_length + 1) {
+            if (mess.substring(0, Config.Mafia.max_name_length + 2).indexOf(": ") >= colon) {
                 if (!botName && !html && colon !== -1) {
                     botName = mess.substring(0, colon);
                     mess = mess.slice(colon + 2);
@@ -226,11 +226,13 @@ function Mafia(mafiachan) {
         if (!(mafia.theme.roles)) {
             return mess;
         }
+        /*
         for (var r in mafia.theme.roles) {
             var role = mafia.theme.roles[r].role;
             var tr = mafia.theme.roles[r].translation;
             mess = mess.replace(new RegExp(tr + "([^A-z])", "g"), colorizeRole(role) + "$1");
         }
+        */
         return mess;
     }
     /*Sends a message to Mafia and Victory Road*/
