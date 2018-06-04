@@ -3121,6 +3121,27 @@ function Mafia(mafiachan) {
                 }
             }
         }
+        if (!(player.stats)) {
+            player.stats = {}
+        }
+        if ("stats" in player.role.actions) {
+            var stats = player.role.actions.stats;
+            if ("set" in stats) {
+                for (var s in stats.set) {
+                    player.stats[s] = stats.set[s];
+                }
+            }
+            if ("add" in stats) {
+                for (var s in stats.add) {
+                    if (player.stats[s]) {
+                        player.stats[s] += stats.add[s];
+                    }
+                    else {
+                        player.stats[s] = stats.add[s];
+                    }
+                }
+            }
+        }
         for (act in player.role.actions) {
             var action = player.role.actions[act];
             if (typeof action === "object" && "mode" in action && typeof action.mode === "object" && "evadeCharges" in action.mode) {
@@ -3422,7 +3443,16 @@ function Mafia(mafiachan) {
                 gamemsgAll("The " + mafia.theme.trside(winSide) + " (" + readable(players, "and") + ") wins!");
             }
             mafia.saveCurrentGame(mafia.theme.trside(winSide));
-            mafia.mafiaStats.result(mafia.theme.trside(winSide));
+            if (rolesWin in theme) {
+                var r;
+                for (var p in players) {
+                    r = players[p].role.translation;
+                    mafia.mafiaStats.result(r);
+                }
+            }
+            else {
+                mafia.mafiaStats.result(mafia.theme.trside(winSide));
+            }
             currentStalk.push("Winners: " + mafia.theme.trside(winSide) + " (" + readable(players, "and") + ")");
             if (winByDeadRoles) {
                 var losingSides = [];
