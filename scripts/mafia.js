@@ -3121,18 +3121,6 @@ function Mafia(mafiachan) {
                 }
             }
         }
-        for (act in player.role.actions) {
-            var action = player.role.actions[act];
-            if (typeof action === "object" && "mode" in action && typeof action.mode === "object" && "evadeCharges" in action.mode) {
-                if (action.mode.evadeCharges == "*") {
-                    if (!(act in player.evadeCharges)) {
-                        player.evadeCharges[act] = 0;
-                    }
-                } else {
-                    player.evadeCharges[act] = action.mode.evadeCharges;
-                }
-            }
-        }
         if ("daykill" in player.role.actions) {
             var action = player.role.actions.daykill;
             if (typeof action === "object" && "mode" in action && typeof action.mode === "object" && "evadeCharges" in action.mode) {
@@ -3422,7 +3410,16 @@ function Mafia(mafiachan) {
                 gamemsgAll("The " + mafia.theme.trside(winSide) + " (" + readable(players, "and") + ") wins!");
             }
             mafia.saveCurrentGame(mafia.theme.trside(winSide));
-            mafia.mafiaStats.result(mafia.theme.trside(winSide));
+            if (rolesWin in theme) {
+                var r;
+                for (var p in players) {
+                    r = players[p].role.translation;
+                    mafia.mafiaStats.result(r);
+                }
+            }
+            else {
+                mafia.mafiaStats.result(mafia.theme.trside(winSide));
+            }
             currentStalk.push("Winners: " + mafia.theme.trside(winSide) + " (" + readable(players, "and") + ")");
             if (winByDeadRoles) {
                 var losingSides = [];
